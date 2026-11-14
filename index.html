@@ -3,6 +3,693 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SafeSow · Flood-aware rice planner · NASA Space Apps 2026</title>
+<meta name="description" content="Flood-aware crop rotation planner for smallholder rice farmers in Guayas and Los Ríos, Ecuador, built on NASA POWER, MODIS and GIBS data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<!--
+  SI disclosure: this page was drafted with an AI assistant (Claude) from the team's spec
+  (docs/spec.md), Isaac's crop data and rotation rules, and Diego's NASA datasets. Reviewed by team WARPDRIVE.
+-->
+<style>
+:root{
+  --bg:#05080f; --bg2:#0a1020; --panel:#0d1528; --panel2:#111c34; --line:#1d2a48; --line2:#2a3c66;
+  --text:#e6edf8; --muted:#8a9bbd; --dim:#5b6c8f;
+  --cyan:#22d3ee; --cyan2:#0891b2; --green:#4ade80; --lime:#a3e635; --amber:#fbbf24; --red:#f87171; --violet:#a78bfa; --blue:#60a5fa;
+  --rice:#38bdf8; --soy:#4ade80; --cover:#d6b46a; --bare:#1a2440;
+  --mono:'JetBrains Mono',ui-monospace,monospace; --sans:'Space Grotesk',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+body{background:
+  radial-gradient(1200px 600px at 85% -10%, rgba(34,211,238,.10), transparent 60%),
+  radial-gradient(900px 500px at -10% 20%, rgba(74,222,128,.06), transparent 60%), var(--bg)}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.35;
+  background-image:linear-gradient(rgba(42,60,102,.25) 1px,transparent 1px),linear-gradient(90deg,rgba(42,60,102,.25) 1px,transparent 1px);
+  background-size:48px 48px;mask-image:linear-gradient(to bottom,#000 0,transparent 70%)}
+a{color:var(--cyan)}
+.wrap{max-width:1320px;margin:0 auto;padding:0 20px;position:relative}
+.top{position:sticky;top:0;z-index:1000;background:rgba(5,8,15,.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:16px;height:62px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.06em}
+.logo .mark{width:30px;height:30px;border-radius:8px;border:1px solid var(--cyan);display:grid;place-items:center;box-shadow:0 0 18px rgba(34,211,238,.35) inset,0 0 12px rgba(34,211,238,.25)}
+.logo .mark svg{width:18px;height:18px}
+.logo small{display:block;font:500 10px var(--mono);color:var(--muted);letter-spacing:.12em}
+.chips{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+.chip{font:600 10.5px var(--mono);letter-spacing:.06em;padding:5px 9px;border-radius:999px;border:1px solid var(--line2);color:var(--muted);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.chip i{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.chip.ok i{background:var(--green);box-shadow:0 0 8px var(--green)}
+.chip.warn i{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.lang{display:flex;border:1px solid var(--line2);border-radius:999px;overflow:hidden}
+.lang button{background:none;border:0;color:var(--muted);font:600 12px var(--mono);padding:6px 11px;cursor:pointer}
+.lang button.on{background:var(--cyan);color:#001018}
+.hero{padding:34px 0 18px}
+.eyebrow{font:600 11px var(--mono);letter-spacing:.18em;color:var(--cyan);text-transform:uppercase}
+h1{font-size:clamp(28px,4vw,46px);line-height:1.05;margin:10px 0 10px;font-weight:700;letter-spacing:-.01em}
+h1 em{font-style:normal;background:linear-gradient(90deg,var(--cyan),var(--green));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{color:var(--muted);max-width:760px;font-size:16px;line-height:1.55;margin:0}
+.alert{margin-top:18px;display:flex;gap:12px;align-items:flex-start;border:1px solid rgba(251,191,36,.35);background:linear-gradient(90deg,rgba(251,191,36,.10),rgba(251,191,36,.02));border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.45}
+.alert b{color:var(--amber)}
+.alert .pulse{flex:0 0 10px;height:10px;border-radius:50%;background:var(--amber);margin-top:5px;box-shadow:0 0 0 0 rgba(251,191,36,.6);animation:pulse 2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 10px rgba(251,191,36,0)}100%{box-shadow:0 0 0 0 rgba(251,191,36,0)}}
+.grid{display:grid;gap:16px}
+.g-main{grid-template-columns:360px 1fr}
+.panel{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:16px;position:relative;overflow:hidden}
+.panel::after{content:"";position:absolute;inset:0;border-radius:16px;pointer-events:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+.ph{display:flex;align-items:center;gap:10px;padding:14px 16px 0}
+.ph .n{font:600 11px var(--mono);color:#001018;background:var(--cyan);border-radius:6px;padding:2px 7px}
+.ph h2{font-size:15px;margin:0;font-weight:600;letter-spacing:.02em}
+.ph .tag{margin-left:auto;font:500 10.5px var(--mono);color:var(--dim);letter-spacing:.06em;text-align:right}
+.pb{padding:14px 16px 16px}
+section{margin:18px 0}
+.lbl{font:600 10.5px var(--mono);letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin:4px 0 8px}
+.zones{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.zone{border:1px solid var(--line2);background:var(--panel2);border-radius:12px;padding:10px;cursor:pointer;text-align:left;color:var(--text);font-family:var(--sans);transition:.15s}
+.zone:hover{border-color:var(--cyan2)}
+.zone.on{border-color:var(--cyan);box-shadow:0 0 0 1px var(--cyan),0 0 22px rgba(34,211,238,.18)}
+.zone b{display:block;font-size:14px}
+.zone span{font:500 10.5px var(--mono);color:var(--muted)}
+select,input[type=range]{width:100%}
+select{background:var(--panel2);color:var(--text);border:1px solid var(--line2);border-radius:10px;padding:9px 10px;font:500 14px var(--sans)}
+.seg{display:flex;border:1px solid var(--line2);border-radius:10px;overflow:hidden}
+.seg button{flex:1;background:var(--panel2);color:var(--muted);border:0;padding:9px 6px;font:600 12.5px var(--sans);cursor:pointer}
+.seg button.on{background:rgba(34,211,238,.15);color:var(--cyan)}
+.seg button+button{border-left:1px solid var(--line2)}
+input[type=range]{accent-color:var(--cyan)}
+.small{font-size:12px;color:var(--muted);line-height:1.45}
+.mono{font-family:var(--mono)}
+#map{height:520px;border-radius:12px;border:1px solid var(--line2);background:#000}
+.mapbar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;align-items:center}
+.lyr{background:var(--panel2);border:1px solid var(--line2);color:var(--muted);border-radius:999px;padding:6px 11px;font:600 11.5px var(--sans);cursor:pointer}
+.lyr.on{color:#001018;background:var(--cyan);border-color:var(--cyan)}
+.mapbar input[type=date]{background:var(--panel2);color:var(--text);border:1px solid var(--line2);border-radius:8px;padding:5px 8px;font:500 12px var(--mono);color-scheme:dark}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:11.5px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.leaflet-container{font-family:var(--sans)}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#0d1528;color:var(--text);border:1px solid var(--line2)}
+.leaflet-control-attribution{background:rgba(5,8,15,.75)!important;color:var(--dim)!important;font-size:9.5px}
+.leaflet-control-attribution a{color:var(--muted)!important}
+.pin{width:18px;height:18px;border-radius:50%;border:2px solid #fff;background:var(--cyan);box-shadow:0 0 0 6px rgba(34,211,238,.25),0 0 18px var(--cyan)}
+.pin.on{background:var(--amber);box-shadow:0 0 0 8px rgba(251,191,36,.25),0 0 22px var(--amber)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpi{padding:14px 16px;border-radius:14px;border:1px solid var(--line);background:linear-gradient(180deg,var(--panel),var(--bg2))}
+.kpi .k{font:600 10.5px var(--mono);letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+.kpi .v{font:600 30px var(--mono);margin:6px 0 2px;letter-spacing:-.02em}
+.kpi .v small{font-size:13px;color:var(--muted);margin-left:4px}
+.kpi .s{font-size:12px;color:var(--muted)}
+.c-cyan{color:var(--cyan)} .c-green{color:var(--green)} .c-amber{color:var(--amber)} .c-red{color:var(--red)} .c-violet{color:var(--violet)}
+.chartbox{position:relative;height:300px}
+.strats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.strat{border:1px solid var(--line2);border-radius:14px;background:var(--panel2);padding:14px;display:flex;flex-direction:column;gap:10px}
+.strat.best{border-color:rgba(74,222,128,.6);box-shadow:0 0 24px rgba(74,222,128,.08)}
+.strat h3{margin:0;font-size:15px;line-height:1.3}
+.strat .code{font:600 11px var(--mono);color:var(--cyan)}
+.badges{display:flex;gap:6px;flex-wrap:wrap}
+.badge{font:600 10.5px var(--mono);padding:3px 7px;border-radius:6px;border:1px solid var(--line2);color:var(--muted)}
+.badge.g{color:var(--green);border-color:rgba(74,222,128,.4)}
+.badge.a{color:var(--amber);border-color:rgba(251,191,36,.4)}
+.badge.c{color:var(--cyan);border-color:rgba(34,211,238,.4)}
+.meter{display:grid;grid-template-columns:120px 1fr 60px;gap:8px;align-items:center;font-size:12px;color:var(--muted)}
+.meter .bar{height:8px;border-radius:99px;background:var(--bare);overflow:hidden}
+.meter .bar b{display:block;height:100%;border-radius:99px}
+.meter .val{font:600 12px var(--mono);color:var(--text);text-align:right}
+.cal{display:grid;grid-template-columns:repeat(12,1fr);gap:3px}
+.cal div{height:26px;border-radius:5px;font:600 9.5px var(--mono);display:grid;place-items:center;color:#001018}
+.cal .h{height:auto;background:none;color:var(--dim);font-weight:500}
+.cal .wet{outline:1px dashed rgba(96,165,250,.55);outline-offset:-1px}
+details{border-top:1px solid var(--line);padding-top:8px}
+summary{cursor:pointer;font:600 12px var(--sans);color:var(--cyan)}
+details p{font-size:12.5px;line-height:1.5;color:#c7d2e8;margin:8px 0}
+details p b{color:var(--text)}
+.callout{border-left:3px solid var(--cyan);background:rgba(34,211,238,.06);padding:10px 12px;border-radius:0 10px 10px 0;font-size:13px;line-height:1.5}
+.flood-grid{display:grid;grid-template-columns:300px 1fr;gap:16px}
+.months{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.months button{background:var(--panel2);border:1px solid var(--line2);color:var(--text);border-radius:10px;padding:10px 0;font:600 13px var(--mono);cursor:pointer}
+.months button.on{background:var(--amber);color:#1a1000;border-color:var(--amber);box-shadow:0 0 18px rgba(251,191,36,.3)}
+.opt{border:1px solid var(--line2);border-radius:12px;padding:12px;background:var(--panel2);margin-bottom:10px}
+.opt .top2{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.opt h4{margin:0;font-size:14px}
+.tl{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin-top:10px}
+.tl div{height:20px;border-radius:4px;background:var(--bare);font:600 9px var(--mono);display:grid;place-items:center;color:var(--dim)}
+.tl .w{background:rgba(96,165,250,.18)}
+.tl .on{color:#001018}
+.flags{display:flex;flex-direction:column;gap:4px;margin-top:8px;font-size:12px}
+.flag{display:flex;gap:6px;align-items:flex-start;line-height:1.4}
+.share{display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:0;border-radius:12px;padding:12px 16px;font:700 14px var(--sans);cursor:pointer;display:inline-flex;align-items:center;gap:8px;text-decoration:none}
+.btn.wa{background:#25d366;color:#04140a}
+.btn.ghost{background:none;border:1px solid var(--line2);color:var(--text)}
+footer{border-top:1px solid var(--line);margin-top:30px;padding:22px 0 40px;color:var(--muted);font-size:12.5px;line-height:1.6}
+footer h5{font:600 11px var(--mono);letter-spacing:.14em;color:var(--text);margin:0 0 8px;text-transform:uppercase}
+.fgrid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:24px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--cyan);color:#001018;padding:10px 16px;border-radius:10px;font-weight:700;opacity:0;transition:.3s;pointer-events:none;z-index:2000}
+.toast.on{opacity:1}
+@media (max-width:1000px){
+  .g-main,.flood-grid,.fgrid{grid-template-columns:1fr}
+  .kpis{grid-template-columns:1fr 1fr}
+  .strats{grid-template-columns:1fr}
+  #map{height:380px}
+  .chips{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="logo">
+      <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="1.8"><path d="M12 21c0-6 0-9 0-13"/><path d="M12 9c-3-1-5-3-5-6 3 0 5 2 5 6z"/><path d="M12 13c3-1 5-3 5-6-3 0-5 2-5 6z"/><path d="M4 21h16"/><circle cx="19" cy="4" r="1.3" fill="#22d3ee"/></svg></div>
+      <div><span id="appName">SafeSow</span><small data-i18n="tagline_small">FIELD SHIFT · NASA SPACE APPS 2026</small></div>
+    </div>
+    <div class="chips">
+      <span class="chip" id="chipPower"><i></i>NASA POWER</span>
+      <span class="chip" id="chipNdvi"><i></i>MODIS NDVI</span>
+      <span class="chip ok"><i></i>NASA GIBS LIVE</span>
+    </div>
+    <div class="lang"><button data-lang="en" class="on">EN</button><button data-lang="es">ES</button></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <div class="eyebrow" data-i18n="eyebrow">Guayas &amp; Los Ríos · Ecuador · smallholder rice</div>
+    <h1 data-i18n-html="h1">What should I sow <em>before and after the flood?</em></h1>
+    <p class="lede" data-i18n="lede">Pick your zone. We combine 25 years of NASA climate data, NASA satellite greenness and live NASA flood maps to compare three rotation strategies for your rice field, month by month.</p>
+    <div class="alert"><span class="pulse"></span><div data-i18n-html="alert"><b>El Niño 2026–27 watch.</b> Ecuador's ERFEN committee (6 Nov 2026) expects a strong El Niño, with the main impact on the coast between November 2026 and March 2027 — the same months rice is sown. Use the “wetter than normal” scenario below to stress-test your plan.</div></div>
+  </div>
+
+  <div class="grid g-main">
+    <div class="panel">
+      <div class="ph"><span class="n">01</span><h2 data-i18n="p1">Your farm</h2></div>
+      <div class="pb">
+        <div class="lbl" data-i18n="zone">Zone</div>
+        <div class="zones" id="zones"></div>
+        <div class="lbl" style="margin-top:14px" data-i18n="pattern">What you grow today</div>
+        <select id="pattern"><option value="rr" data-i18n="pattern_rr">Rice + rice / ratoon (soca)</option></select>
+        <div class="lbl" style="margin-top:14px" data-i18n="scenario">Wet-season scenario</div>
+        <div class="seg" id="scen"><button data-v="1" class="on" data-i18n="normal">Normal</button><button data-v="1.5" data-i18n="wetter">Wetter (El Niño what-if)</button></div>
+        <div id="multBox" style="display:none;margin-top:10px">
+          <div class="small"><span data-i18n="mult">Jan–Apr rain ×</span> <b class="mono c-amber" id="multVal">1.5</b></div>
+          <input type="range" id="mult" min="1.1" max="2" step="0.1" value="1.5">
+          <div class="small" data-i18n="notforecast">Scenario, not a forecast.</div>
+        </div>
+        <div class="lbl" style="margin-top:16px" data-i18n="datasrc">Data for this zone</div>
+        <div class="small" id="zoneMeta"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><span class="n">02</span><h2 data-i18n="p2">Live view from space</h2><span class="tag" data-i18n="p2tag">NASA GIBS · MODIS / VIIRS / IMERG</span></div>
+      <div class="pb">
+        <div class="mapbar" id="layers"></div>
+        <div id="map"></div>
+        <div class="legend" id="legend"></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="kpis" id="kpis"></section>
+
+  <section class="panel">
+    <div class="ph"><span class="n">03</span><h2 data-i18n="p3">Rain vs. crop water demand</h2><span class="tag" id="climTag"></span></div>
+    <div class="pb">
+      <div class="chartbox"><canvas id="climChart"></canvas></div>
+      <div class="small" style="margin-top:8px" id="climNote"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="ph"><span class="n">04</span><h2 data-i18n="p4">Compare 3 rotation strategies</h2><span class="tag" data-i18n="p4tag">Options to discuss with a local technician</span></div>
+    <div class="pb">
+      <div class="strats" id="strats"></div>
+      <div class="legend" style="margin-top:12px">
+        <span><i style="background:var(--rice)"></i><span data-i18n="rice">Rice</span></span>
+        <span><i style="background:var(--soy)"></i><span data-i18n="soybean">Soybean</span></span>
+        <span><i style="background:var(--cover)"></i><span data-i18n="cover">Water-tolerant cover</span></span>
+        <span><i style="background:var(--bare);border:1px solid var(--line2)"></i><span data-i18n="bare">Bare / fallow</span></span>
+        <span><i style="outline:1px dashed #60a5fa;background:none"></i><span data-i18n="wetmonths">Flood-risk months (Jan–Apr)</span></span>
+      </div>
+      <p class="small" style="margin-top:10px" data-i18n="method">Irrigation need = Σ max(0, Kc × ET0 − rain) from May to December. Kc: FAO-56 Table 12 (data/crops.csv). ET0: Hargreaves from NASA POWER. Soil storage and paddy percolation are not included.</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="ph"><span class="n">05</span><h2 data-i18n="p5">After the flood: what can I still sow?</h2></div>
+    <div class="pb flood-grid">
+      <div>
+        <div class="lbl" data-i18n="receded">The water went down in…</div>
+        <div class="months" id="recMonths"></div>
+        <div class="callout" style="margin-top:14px" id="recSummary"></div>
+      </div>
+      <div id="recOpts"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="ph"><span class="n">06</span><h2 data-i18n="p6">Field greenness from space (NDVI)</h2><span class="tag">NASA MODIS MOD13Q1 · 250 m · 16-day</span></div>
+    <div class="pb">
+      <div class="chartbox" style="height:260px"><canvas id="ndviChart"></canvas></div>
+      <div class="small" style="margin-top:8px" id="ndviNote"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="ph"><span class="n">07</span><h2 data-i18n="p7">Take the plan to your technician</h2></div>
+    <div class="pb">
+      <p class="small" style="margin-top:0" data-i18n="sharetxt">Nothing you choose here is stored. Send a short summary to your phone or to your agronomist.</p>
+      <div class="share">
+        <a class="btn wa" id="waBtn" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.2c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.7 1.2 1.6 2 1.1 1 2 1.3 2.3 1.4.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg><span data-i18n="wa">Send via WhatsApp</span></a>
+        <button class="btn ghost" id="copyBtn" data-i18n="copy">Copy summary</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap fgrid">
+    <div>
+      <h5 data-i18n="f_about">About</h5>
+      <div data-i18n="f_about_t">Built in 48 hours by team WARPDRIVE (Guayaquil) for the NASA Space Apps Challenge 2026, challenge “Field Shift: Adapting Farms with NASA Data”. This tool supports, and does not replace, the farmer's judgement and local technical advice.</div>
+      <div style="margin-top:8px" data-i18n="f_ai">AI disclosure: code and texts were drafted with AI assistants (Claude, Gemini) from the team's own decisions, data and sources, and reviewed by the team.</div>
+    </div>
+    <div>
+      <h5 data-i18n="f_data">NASA data</h5>
+      NASA POWER (climate 2001–2025)<br>MODIS MOD13Q1 v061 NDVI<br>NASA GIBS: MODIS/VIIRS flood 3-day, NDVI, true color, IMERG<br>NASA SEDAC flood hazard 1985–2003
+    </div>
+    <div>
+      <h5 data-i18n="f_more">More</h5>
+      <a href="https://github.com/milkyway3257/Warpdrive-spaceapps-2026" target="_blank">GitHub repository</a><br>
+      <a href="https://github.com/milkyway3257/Warpdrive-spaceapps-2026/blob/main/docs/rotation_rules.md" target="_blank">Rotation rules &amp; sources</a><br>
+      FAO-56 · FAO ECOCROP · INIAP · IRRI
+    </div>
+  </div>
+</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+const APP_NAME = "SafeSow";
+const REPO_RAW = "https://raw.githubusercontent.com/milkyway3257/Warpdrive-spaceapps-2026/main/";
+const MONTHS = {en:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+                es:["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"]};
+const WET = [1,2,3,4];      // flood-risk months
+const IRR_FROM = 5;         // irrigation counted May–Dec
+const LOCAL_RICE_DAYS = 120; // INIAP lowland varieties ~110–130 days
+
+const I18N = {
+ en:{tagline_small:"FIELD SHIFT · NASA SPACE APPS 2026",eyebrow:"Guayas & Los Ríos · Ecuador · smallholder rice",
+  h1:'What should I sow <em>before and after the flood?</em>',
+  lede:"Pick your zone. We combine 25 years of NASA climate data, NASA satellite greenness and live NASA flood maps to compare three rotation strategies for your rice field, month by month.",
+  alert:"<b>El Niño 2026–27 watch.</b> Ecuador's ERFEN committee (6 Nov 2026) expects a strong El Niño, with the main impact on the coast between November 2026 and March 2027 — the same months rice is sown. Use the “wetter than normal” scenario to stress-test your plan.",
+  p1:"Your farm",zone:"Zone",pattern:"What you grow today",pattern_rr:"Rice + rice / ratoon (soca)",scenario:"Wet-season scenario",normal:"Normal",wetter:"Wetter (El Niño what-if)",
+  mult:"Jan–Apr rain ×",notforecast:"Scenario, not a forecast.",datasrc:"Data for this zone",
+  p2:"Live view from space",p2tag:"NASA GIBS · MODIS / VIIRS / IMERG",
+  p3:"Rain vs. crop water demand",p4:"Compare 3 rotation strategies",p4tag:"Options to discuss with a local technician",
+  rice:"Rice",soybean:"Soybean",cover:"Water-tolerant cover",bare:"Bare / fallow",wetmonths:"Flood-risk months (Jan–Apr)",
+  method:"Irrigation need = Σ max(0, Kc × ET0 − rain) from May to December. Kc: FAO-56 Table 12 (data/crops.csv). ET0: Hargreaves from NASA POWER. Soil storage and paddy percolation are not included.",
+  p5:"After the flood: what can I still sow?",receded:"The water went down in…",
+  p6:"Field greenness from space (NDVI)",p7:"Take the plan to your technician",
+  sharetxt:"Nothing you choose here is stored. Send a short summary to your phone or to your agronomist.",
+  wa:"Send via WhatsApp",copy:"Copy summary",copied:"Summary copied",
+  f_about:"About",f_data:"NASA data",f_more:"More",
+  f_about_t:"Built in 48 hours by team WARPDRIVE (Guayaquil) for the NASA Space Apps Challenge 2026, challenge “Field Shift: Adapting Farms with NASA Data”. This tool supports, and does not replace, the farmer's judgement and local technical advice.",
+  f_ai:"AI disclosure: code and texts were drafted with AI assistants (Claude, Gemini) from the team's own decisions, data and sources, and reviewed by the team.",
+  k_rain:"Jan–Apr rain",k_rain_s:"flood-season total",k_irr:"Dry-season water (rice)",k_irr_s:"irrigation need, Jun–Sep",
+  k_save:"Water saved with soybean",k_save_s:"vs. dry-season rice",k_exp:"Cash crop exposed",k_exp_s:"months in flood season · current pattern",
+  rain:"Rain (mm/month)",et0:"Water demand ET0 (mm/month)",wetseason:"Wet season / flood risk",dryseason:"Dry season",
+  m_irr:"Dry-season water",m_exp:"Rain on cash crop",m_bare:"Bare months",
+  legume:"Legume",breaks:"Breaks rice-after-rice",yes:"Yes",no:"No",partly:"Partly",lowest_water:"Lowest water",lowest_risk:"Lowest flood exposure",baseline:"Your baseline",
+  why:"Why it is shown",evidence:"Evidence",benefits:"Benefits",gaps:"Information gaps",risks:"Risks to review locally",details:"Why, evidence & risks",
+  sow_in:"Sow in",harvest:"harvest ≈",water_need:"water to add",months_word:"months",
+  rec_sum:(m,p,d)=>`If the water went down in <b>${m}</b>, wait until the soil can be walked on (often 1–3 weeks) and sow around <b>${p}</b>. The dry season starts in June: ${d}`,
+  rec_wet:n=>`there are still <b>${n}</b> wet month(s) left, so drainage matters.`, rec_dry:"you will be sowing into the dry season, so irrigation decides.",
+  f_tol:"Tolerates flooding",f_nottol:"Does not tolerate waterlogging — do not sow into wet soil",f_wetsow:"Sowing month is still rainy (>100 mm): high waterlogging risk",
+  f_irr:"Needs irrigation in the dry season",f_n:"Fixes nitrogen for the next rice crop",f_cycle:d=>`Cycle ≈ ${d} days`,
+  cover_note:"Covers (Sesbania, Azolla) from data/crops.csv can protect the soil while the field is still wet; check local seed or inoculum.",
+  cover_gap:"Water use and cycle of the cover crops are not in our data yet (blank in crops.csv). They are shown as a data gap, never as zero.",ndvi_raw:"NDVI (16-day composite)",ndvi_smooth:"Smoothed (3-pt median)",
+  ndvi_note:(l,d)=>`Latest: <b>${l}</b> on ${d}. Green crop ≈ 0.6–0.9 · bare soil ≈ 0.1–0.3 · water ≈ 0 or below. One 250 m pixel ≈ the area around the zone point, not a single plot. Clouds lower some values; the line is smoothed.`,
+  ndvi_none:"NDVI time series for this zone is being processed.",
+  clim_note:(src,ce,fe)=>`Source: ${src}. Zone-level (~50 km grid), 2001–2025 long-term average — not a field measurement. Temperature corrected from grid-cell elevation ${ce} m to field elevation ${fe} m.`,
+  meta:(lat,lon,ce)=>`Point ${lat}, ${lon} · NASA POWER cell elevation ${ce} m`,
+  shared_cell:"Daule, Salitre and Samborondón fall in the same NASA POWER grid cell (~50 km), so their climate is almost identical; NDVI (250 m) is what tells them apart.",
+  lyr_true:"True color",lyr_flood:"Flood (3-day)",lyr_ndvi:"NDVI 16-day",lyr_hazard:"Flood hazard 1985–2003",lyr_rain:"Rain now (IMERG)",lyr_hi:"High-res base",
+  leg_flood:"Red = flood water · blue = normal water · gray = no data (clouds) · MODIS near real time",leg_ndvi:"Greener = more vegetation",leg_hazard:"Historical flood frequency (darker = more often)",leg_rain:"Precipitation rate",
+  wa_head:"🌾 SafeSow · rice plan from NASA data",wa_zone:"Zone",wa_scen:"Scenario",wa_norm:"normal climate",wa_wet:m=>`wetter than normal (×${m}, what-if)`,
+  wa_s:"Strategies (dry-season irrigation · rain on cash crop Jan–Apr)",wa_flood:m=>`If the water went down in ${m}:`,wa_foot:"Options to review with a local technician, not instructions."},
+ es:{tagline_small:"FIELD SHIFT · NASA SPACE APPS 2026",eyebrow:"Guayas y Los Ríos · Ecuador · pequeño arrocero",
+  h1:'¿Qué siembro <em>antes y después de la inundación?</em>',
+  lede:"Elige tu zona. Combinamos 25 años de clima de la NASA, el verdor de los cultivos visto por satélite y mapas de inundación en vivo de la NASA para comparar tres formas de rotar tu arrozal, mes a mes.",
+  alert:"<b>Alerta El Niño 2026–27.</b> El comité ERFEN de Ecuador (6 nov 2026) espera un El Niño fuerte, con el mayor impacto en la Costa entre noviembre de 2026 y marzo de 2027 — justo cuando se siembra el arroz. Usa el escenario “más lluvioso de lo normal” para poner a prueba tu plan.",
+  p1:"Tu finca",zone:"Zona",pattern:"Lo que siembras hoy",pattern_rr:"Arroz + arroz / soca",scenario:"Escenario del invierno",normal:"Normal",wetter:"Más lluvioso (¿y si hay El Niño?)",
+  mult:"Lluvia ene–abr ×",notforecast:"Escenario, no es un pronóstico.",datasrc:"Datos de esta zona",
+  p2:"Tu zona vista desde el espacio",p2tag:"NASA GIBS · MODIS / VIIRS / IMERG",
+  p3:"Lluvia vs. agua que pide el cultivo",p4:"Compara 3 formas de rotar",p4tag:"Opciones para conversar con un técnico local",
+  rice:"Arroz",soybean:"Soya",cover:"Cobertura que aguanta agua",bare:"Suelo desnudo / descanso",wetmonths:"Meses con riesgo de inundación (ene–abr)",
+  method:"Agua de riego = Σ máx(0, Kc × ET0 − lluvia) de mayo a diciembre. Kc: FAO-56 Tabla 12 (data/crops.csv). ET0: Hargreaves con NASA POWER. No incluye el agua guardada en el suelo ni la percolación de la piscina.",
+  p5:"Después de la inundación: ¿qué puedo sembrar todavía?",receded:"El agua bajó en…",
+  p6:"Verdor del campo visto desde el espacio (NDVI)",p7:"Lleva el plan a tu técnico",
+  sharetxt:"No guardamos nada de lo que eliges. Envía un resumen corto a tu teléfono o a tu agrónomo.",
+  wa:"Enviar por WhatsApp",copy:"Copiar resumen",copied:"Resumen copiado",
+  f_about:"Acerca de",f_data:"Datos NASA",f_more:"Más",
+  f_about_t:"Hecho en 48 horas por el equipo WARPDRIVE (Guayaquil) para el NASA Space Apps Challenge 2026, reto “Field Shift: Adapting Farms with NASA Data”. Esta herramienta apoya, y no reemplaza, el criterio del agricultor ni la asesoría técnica local.",
+  f_ai:"Uso de IA: el código y los textos se redactaron con asistentes de IA (Claude, Gemini) a partir de las decisiones, datos y fuentes del equipo, y fueron revisados por el equipo.",
+  k_rain:"Lluvia ene–abr",k_rain_s:"total del invierno",k_irr:"Agua en verano (arroz)",k_irr_s:"riego necesario, jun–sep",
+  k_save:"Agua que ahorras con soya",k_save_s:"frente a arroz de verano",k_exp:"Cultivo expuesto",k_exp_s:"meses en invierno · patrón actual",
+  rain:"Lluvia (mm/mes)",et0:"Demanda de agua ET0 (mm/mes)",wetseason:"Invierno / riesgo de inundación",dryseason:"Verano (seco)",
+  m_irr:"Agua en verano",m_exp:"Lluvia sobre el cultivo",m_bare:"Meses sin cultivo",
+  legume:"Leguminosa",breaks:"Corta arroz tras arroz",yes:"Sí",no:"No",partly:"En parte",lowest_water:"Menos agua",lowest_risk:"Menos expuesto",baseline:"Tu punto de partida",
+  why:"Por qué aparece",evidence:"Evidencia",benefits:"Beneficios",gaps:"Información que falta",risks:"Riesgos a revisar localmente",details:"Por qué, evidencia y riesgos",
+  sow_in:"Siembra en",harvest:"cosecha ≈",water_need:"agua a añadir",months_word:"meses",
+  rec_sum:(m,p,d)=>`Si el agua bajó en <b>${m}</b>, espera a que se pueda caminar en el suelo (a menudo 1–3 semanas) y siembra cerca de <b>${p}</b>. El verano empieza en junio: ${d}`,
+  rec_wet:n=>`todavía quedan <b>${n}</b> mes(es) de lluvia, así que el drenaje es clave.`, rec_dry:"vas a sembrar entrando al verano, así que el riego decide.",
+  f_tol:"Aguanta inundación",f_nottol:"No aguanta encharcamiento — no siembres en suelo mojado",f_wetsow:"El mes de siembra aún es lluvioso (>100 mm): alto riesgo de encharcamiento",
+  f_irr:"Necesita riego en el verano",f_n:"Fija nitrógeno para el próximo arroz",f_cycle:d=>`Ciclo ≈ ${d} días`,
+  cover_note:"Las coberturas (Sesbania, Azolla) de data/crops.csv pueden proteger el suelo mientras el campo sigue mojado; verifica si hay semilla o inóculo en la zona.",
+  cover_gap:"El consumo de agua y el ciclo de las coberturas aún no están en nuestros datos (vacíos en crops.csv). Se muestran como información que falta, nunca como cero.",ndvi_raw:"NDVI (compuesto de 16 días)",ndvi_smooth:"Suavizado (mediana de 3)",
+  ndvi_note:(l,d)=>`Último: <b>${l}</b> el ${d}. Cultivo verde ≈ 0,6–0,9 · suelo desnudo ≈ 0,1–0,3 · agua ≈ 0 o menos. Un píxel de 250 m ≈ el área alrededor del punto de la zona, no una sola piscina. Las nubes bajan algunos valores; la línea está suavizada.`,
+  ndvi_none:"La serie de NDVI de esta zona se está procesando.",
+  clim_note:(src,ce,fe)=>`Fuente: ${src}. Dato de zona (cuadro de ~50 km), promedio 2001–2025 — no es una medición del campo. Temperatura corregida de la altura del cuadro (${ce} m) a la del campo (${fe} m).`,
+  meta:(lat,lon,ce)=>`Punto ${lat}, ${lon} · altura del cuadro NASA POWER ${ce} m`,
+  shared_cell:"Daule, Salitre y Samborondón caen en el mismo cuadro de NASA POWER (~50 km), así que su clima es casi igual; el NDVI (250 m) es lo que las diferencia.",
+  lyr_true:"Color real",lyr_flood:"Inundación (3 días)",lyr_ndvi:"NDVI 16 días",lyr_hazard:"Riesgo de inundación 1985–2003",lyr_rain:"Lluvia ahora (IMERG)",lyr_hi:"Mapa detallado",
+  leg_flood:"Rojo = inundación · azul = agua normal · gris = sin dato (nubes) · MODIS casi en tiempo real",leg_ndvi:"Más verde = más vegetación",leg_hazard:"Frecuencia histórica de inundación (más oscuro = más seguido)",leg_rain:"Intensidad de lluvia",
+  wa_head:"🌾 SafeSow · plan de arroz con datos de la NASA",wa_zone:"Zona",wa_scen:"Escenario",wa_norm:"clima normal",wa_wet:m=>`más lluvioso que lo normal (×${m}, escenario)`,
+  wa_s:"Estrategias (riego en verano · lluvia sobre el cultivo ene–abr)",wa_flood:m=>`Si el agua bajó en ${m}:`,wa_foot:"Opciones para revisar con un técnico local, no son instrucciones."}
+};
+let LANG = "en";
+const T = (k,...a)=>{const v=(I18N[LANG][k]??I18N.en[k]??k);return typeof v==="function"?v(...a):v};
+const M = i=>MONTHS[LANG][i-1];
+
+const STRATS = [
+ {id:"S0", blocks:[["rice",1,4],["rice",6,4]], breaks:"no",
+  name:{en:"Current: wet-season rice + dry-season rice or ratoon",es:"Actual: arroz de invierno + arroz o soca de verano"},
+  why:{en:"Your current pattern, shown as the baseline to compare against.",es:"Tu forma actual de sembrar; sirve como punto de comparación."},
+  evidence:{en:"NASA POWER 2001–2025 marks January–April as the wettest months; water use ETc = Kc × ET0 with rice Kc from FAO-56. Rice suitability from FAO ECOCROP.",es:"NASA POWER 2001–2025 marca enero–abril como los meses más lluviosos; el uso de agua ETc = Kc × ET0 con el Kc del arroz de FAO-56. Aptitud del arroz según FAO ECOCROP."},
+  benefits:{en:"Familiar management and an established rice market.",es:"Manejo conocido y mercado de arroz establecido."},
+  gaps:{en:"Field elevation, flood depth and duration, drainage, variety and maturity date, real irrigation access, local prices.",es:"Altura del terreno, profundidad y duración de la inundación, drenaje, variedad y fecha de cosecha, acceso real a riego, precios locales."},
+  risks:{en:"Young rice can be damaged by prolonged flooding; rice after rice keeps pests and does not break the monoculture; dry-season rice needs a lot of irrigation.",es:"El arroz tierno puede dañarse con inundaciones largas; arroz tras arroz mantiene las plagas y no corta el monocultivo; el arroz de verano necesita mucho riego."}},
+ {id:"S1", blocks:[["rice",1,4],["soybean",6,4]], breaks:"yes",
+  name:{en:"Rice in the wet season → soybean in the dry season",es:"Arroz en invierno → soya en verano"},
+  why:{en:"Soybean is a legume that breaks rice-after-rice. INIAP advises sowing soybean right after the rice harvest, only in dry conditions; around Babahoyo it may need irrigation.",es:"La soya es una leguminosa que corta el arroz tras arroz. INIAP recomienda sembrarla justo después de cosechar el arroz, solo con suelo seco; en la zona de Babahoyo puede necesitar riego."},
+  evidence:{en:"Same NASA POWER inputs and FAO-56 Kc: soybean needs about a quarter less dry-season water than rice in Daule. Local timing: INIAP soybean guide; Babahoyo rice→soybean: Caicedo-Camposano et al. (Killkana Técnica).",es:"Con los mismos datos de NASA POWER y Kc de FAO-56: la soya pide cerca de un cuarto menos de agua en verano que el arroz en Daule. Fechas locales: guía de soya de INIAP; arroz→soya en Babahoyo: Caicedo-Camposano et al. (Killkana Técnica)."},
+  benefits:{en:"Breaks the monoculture, adds a legume and lowers modelled dry-season water need.",es:"Corta el monocultivo, suma una leguminosa y baja el agua que se necesita en verano."},
+  gaps:{en:"Whether floodwater fully receded, soil trafficability, seed and buyers, irrigation volume, salinity, disease pressure and price.",es:"Si el agua bajó del todo, si se puede entrar al terreno, semilla y compradores, cantidad de riego, salinidad, enfermedades y precio."},
+  risks:{en:"Soybean is not a flooded-field crop: never sow into waterlogged soil. Late sowing can run short of water; wet conditions raise fungal disease.",es:"La soya no es un cultivo de piscina: nunca la siembres en suelo encharcado. Sembrar tarde puede dejarla sin agua; la humedad aumenta los hongos."}},
+ {id:"S2", blocks:[["cover",1,4],["rice",6,4]], breaks:"partly",
+  name:{en:"Skip the flood season: water-tolerant cover → irrigated dry-season rice",es:"Evitar el invierno: cobertura que aguanta agua → arroz de verano con riego"},
+  why:{en:"On plots that flood, no young rice is exposed during the riskiest months. A risk-management option, not a universal replacement.",es:"En lotes que se inundan, no hay arroz tierno expuesto en los meses de más riesgo. Es una opción para manejar el riesgo, no un reemplazo para todos."},
+  evidence:{en:"Exposure counted with NASA POWER monthly rain. Covers for review: Sesbania rostrata (IRRI: grows flooded or dry as green manure) and Azolla (FAO: grows in standing water in rice fields).",es:"La exposición se calcula con la lluvia mensual de NASA POWER. Coberturas a evaluar: Sesbania rostrata (IRRI: crece inundada o seca como abono verde) y Azolla (FAO: crece en el agua de los arrozales)."},
+  benefits:{en:"Less money exposed in the wettest months; soil stays covered; a cover can add organic matter or nitrogen.",es:"Menos inversión expuesta en los meses más lluviosos; el suelo queda cubierto; la cobertura puede aportar materia orgánica o nitrógeno."},
+  gaps:{en:"Flood depth and recession date, local cover seed or inoculum, drainage, labour, irrigation and market for one rice crop per year.",es:"Profundidad y fecha en que baja el agua, semilla o inóculo local, drenaje, mano de obra, riego y mercado con una sola cosecha de arroz al año."},
+  risks:{en:"One rice harvest instead of two. A cover may not survive every flood; unmanaged Azolla can block water flow. Only sow dry-season rice with irrigation available.",es:"Una cosecha de arroz en vez de dos. La cobertura puede no sobrevivir a toda inundación; la Azolla sin manejo puede tapar el paso del agua. Siembra arroz de verano solo si hay riego."}}
+];
+
+const DATA = {clim:[], crops:{}, ndvi:[], sites:[]};
+const STATE = {site:null, mult:1, multWet:1.5, rec:3};
+
+async function loadCSV(name){
+  for (const base of ["data/", REPO_RAW+"data/"]){
+    try{
+      const r = await fetch(base+name, {cache:"no-cache"});
+      if(!r.ok) continue;
+      const txt = await r.text();
+      if(!txt.trim()) continue;
+      return Papa.parse(txt.trim(), {header:true, dynamicTyping:true, skipEmptyLines:true}).data;
+    }catch(e){}
+  }
+  return null;
+}
+
+function cropKc(c, months){ // monthly Kc list from FAO-56 stages
+  const k = DATA.crops[c]; if(!k || k.kc_ini==null) return null;
+  if(months<=3) return [k.kc_ini,k.kc_mid,k.kc_end].slice(0,months);
+  const a=[k.kc_ini]; for(let i=0;i<months-2;i++) a.push(k.kc_mid); a.push(k.kc_end); return a;
+}
+const FALLBACK_CROPS = {
+  rice:{crop:"rice",kc_ini:1.05,kc_mid:1.20,kc_end:0.90,cycle_days:120,n_fixing:"no",flood_tolerance:"high"},
+  soybean:{crop:"soybean",kc_ini:0.40,kc_mid:1.15,kc_end:0.50,cycle_days:85,n_fixing:"yes",flood_tolerance:"low"}
+};
+
+function climFor(id){ return DATA.clim.filter(r=>r.site_id===id).sort((a,b)=>a.month-b.month); }
+function byMonth(rows,key){ const o={}; rows.forEach(r=>o[r.month]=+r[key]); return o; }
+
+function calendar(blocks){
+  const cal={};
+  blocks.forEach(([crop,start,n])=>{
+    const kcs = crop==="cover"?null:cropKc(crop,n);
+    for(let i=0;i<n;i++){ const m=(start-1+i)%12+1; cal[m]={crop,kc:kcs?kcs[i]:null}; }
+  });
+  return cal;
+}
+
+function evaluate(s, clim, mult){
+  const rain=byMonth(clim,"rain_mm"), et0=byMonth(clim,"et0_mm"), cal=calendar(s.blocks);
+  let irr=0, expMm=0, expM=0, bare=0, legume=false;
+  for(let m=1;m<=12;m++){
+    const c=cal[m];
+    if(!c){bare++;continue;}
+    if(c.crop==="soybean") legume=true;
+    if(c.kc!=null && m>=IRR_FROM) irr+=Math.max(0,c.kc*et0[m]-rain[m]);
+    if(c.crop!=="cover" && WET.includes(m)){expM++;expMm+=rain[m]*mult;}
+  }
+  return {irr:Math.round(irr), expMm:Math.round(expMm), expM, bare, legume, cal};
+}
+
+function ndviSeries(id){
+  const rows = DATA.ndvi.filter(r=>r.site_id===id && r.ndvi!=null && r.ndvi!=="");
+  const g={}; rows.forEach(r=>{(g[r.date]??=[]).push(+r.ndvi)});
+  const dates=Object.keys(g).sort();
+  const vals=dates.map(d=>g[d].reduce((a,b)=>a+b,0)/g[d].length);   // de-duplicate by date
+  const smooth=vals.map((v,i)=>{const w=vals.slice(Math.max(0,i-1),i+2).slice().sort((a,b)=>a-b);return w[Math.floor(w.length/2)]});
+  return {dates,vals,smooth};
+}
+
+let map, pins={}, overlay=null, base, hiBase;
+const GIBS = (layer,tms,ext,time)=>`https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/${layer}/default/${time?time+"/":""}${tms}/{z}/{y}/{x}.${ext}`;
+const yday = ()=>{const d=new Date(Date.now()-864e5);return d.toISOString().slice(0,10)};
+const LAYERS = [
+  {id:"true", k:"lyr_true", base:true},
+  {id:"hi", k:"lyr_hi", base:true},
+  {id:"flood", k:"lyr_flood", url:t=>GIBS("MODIS_Combined_Flood_3-Day","GoogleMapsCompatible_Level9","png",t), z:9, time:true, leg:"leg_flood", legc:"#ef4444"},
+  {id:"ndvi", k:"lyr_ndvi", url:()=>GIBS("MODIS_Terra_L3_NDVI_16Day","GoogleMapsCompatible_Level9","png","default"), z:9, leg:"leg_ndvi", legc:"linear-gradient(90deg,#a16207,#facc15,#16a34a,#14532d)"},
+  {id:"hazard", k:"lyr_hazard", url:()=>GIBS("NDH_Flood_Hazard_Frequency_Distribution_1985-2003","GoogleMapsCompatible_Level7","png",""), z:7, leg:"leg_hazard", legc:"linear-gradient(90deg,#bfdbfe,#1d4ed8)"},
+  {id:"rain", k:"lyr_rain", url:t=>GIBS("IMERG_Precipitation_Rate","GoogleMapsCompatible_Level6","png",t), z:6, time:true, leg:"leg_rain", legc:"linear-gradient(90deg,#22d3ee,#a78bfa,#f472b6)"}
+];
+let activeBase="hi", activeOverlay="ndvi", overlayDate=yday();
+
+function initMap(){
+  map = L.map("map",{zoomControl:true,attributionControl:true,worldCopyJump:false}).setView([-1.86,-79.78],9);
+  base = L.tileLayer(GIBS("MODIS_Terra_CorrectedReflectance_TrueColor","GoogleMapsCompatible_Level9","jpeg",yday()),
+    {maxNativeZoom:9,maxZoom:15,attribution:'Imagery: NASA GIBS / EOSDIS'});
+  hiBase = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    {maxZoom:17,attribution:'Base: Esri World Imagery'});
+  (activeBase==="hi"?hiBase:base).addTo(map);
+  DATA.sites.forEach(s=>{
+    const icon=L.divIcon({className:"",html:`<div class="pin" id="pin-${s.site_id}"></div>`,iconSize:[18,18],iconAnchor:[9,9]});
+    pins[s.site_id]=L.marker([s.lat,s.lon],{icon}).addTo(map).on("click",()=>selectSite(s.site_id))
+      .bindTooltip(s.site_name,{direction:"top",offset:[0,-10]});
+  });
+  renderLayerBar(); setOverlay(activeOverlay);
+}
+function renderLayerBar(){
+  const bar=document.getElementById("layers");
+  bar.innerHTML = LAYERS.map(l=>`<button class="lyr ${(l.base?activeBase:activeOverlay)===l.id?"on":""}" data-l="${l.id}">${T(l.k)}</button>`).join("")
+    + `<input type="date" id="odate" value="${overlayDate}" max="${yday()}" title="date">`;
+  bar.querySelectorAll(".lyr").forEach(b=>b.onclick=()=>{
+    const l=LAYERS.find(x=>x.id===b.dataset.l);
+    if(l.base){activeBase=l.id; map.removeLayer(base); map.removeLayer(hiBase); (l.id==="hi"?hiBase:base).addTo(map); if(overlay) overlay.bringToFront();}
+    else setOverlay(activeOverlay===l.id?null:l.id);
+    renderLayerBar();
+  });
+  document.getElementById("odate").onchange=e=>{overlayDate=e.target.value||yday(); setOverlay(activeOverlay);
+    if(activeBase==="true"){map.removeLayer(base); base=L.tileLayer(GIBS("MODIS_Terra_CorrectedReflectance_TrueColor","GoogleMapsCompatible_Level9","jpeg",overlayDate),{maxNativeZoom:9,maxZoom:15,attribution:'Imagery: NASA GIBS / EOSDIS'}).addTo(map); if(overlay) overlay.bringToFront();}};
+}
+function setOverlay(id){
+  if(overlay){map.removeLayer(overlay); overlay=null;}
+  activeOverlay=id;
+  const leg=document.getElementById("legend");
+  if(!id){leg.innerHTML="";return;}
+  const l=LAYERS.find(x=>x.id===id);
+  overlay=L.tileLayer(l.url(l.time?overlayDate:null),{maxNativeZoom:l.z,maxZoom:17,opacity:id==="flood"?0.95:0.7,attribution:"NASA GIBS"}).addTo(map);
+  leg.innerHTML=`<span><i style="background:${l.legc};width:46px"></i>${T(l.leg)}${l.time?` · ${overlayDate}`:""}</span>`;
+}
+
+let climChart, ndviChart;
+Chart.defaults.color="#8a9bbd"; Chart.defaults.font.family="'Space Grotesk',system-ui"; Chart.defaults.borderColor="rgba(42,60,102,.45)";
+
+function renderZones(){
+  document.getElementById("zones").innerHTML = DATA.sites.map(s=>{
+    const c=climFor(s.site_id), wet=c.filter(r=>WET.includes(r.month)).reduce((a,r)=>a+ +r.rain_mm,0);
+    return `<button class="zone ${s.site_id===STATE.site?"on":""}" data-s="${s.site_id}"><b>${s.site_name.split(",")[0]}</b><span>${s.site_name.split(",")[1]?.trim()||""} · ${Math.round(wet)} mm</span></button>`;
+  }).join("");
+  document.querySelectorAll(".zone").forEach(b=>b.onclick=()=>selectSite(b.dataset.s));
+}
+function selectSite(id){
+  STATE.site=id; renderZones();
+  Object.keys(pins).forEach(k=>document.getElementById("pin-"+k)?.classList.toggle("on",k===id));
+  const s=DATA.sites.find(x=>x.site_id===id); if(map){map.invalidateSize(); map.setView([s.lat,s.lon],10,{animate:true});}
+  renderAll();
+}
+function renderAll(){
+  const s=DATA.sites.find(x=>x.site_id===STATE.site), clim=climFor(STATE.site);
+  const shared = ["daule","salitre","samborondon"].includes(STATE.site);
+  document.getElementById("zoneMeta").innerHTML = T("meta",(+s.lat).toFixed(2),(+s.lon).toFixed(2),s.cell_elev_m) + (shared?`<br><br>ⓘ ${T("shared_cell")}`:"");
+  const res = STRATS.map(st=>({st,...evaluate(st,clim,STATE.mult)}));
+  renderKpis(clim,res); renderClim(clim,s); renderStrats(res); renderFlood(clim); renderNdvi(); updateShare(res,clim);
+}
+function renderKpis(clim,res){
+  const rain=byMonth(clim,"rain_mm");
+  const wet=WET.reduce((a,m)=>a+rain[m],0)*STATE.mult;
+  const r0=res[0].irr, r1=res[1].irr, save=r0?Math.round((r0-r1)/r0*100):0;
+  document.getElementById("kpis").innerHTML = [
+    ["k_rain",Math.round(wet),"mm","k_rain_s","c-cyan"],
+    ["k_irr",r0,"mm","k_irr_s","c-amber"],
+    ["k_save",save,"%","k_save_s","c-green"],
+    ["k_exp",res[0].expM,"/ 4","k_exp_s","c-red"]
+  ].map(([k,v,u,s,c])=>`<div class="kpi"><div class="k">${T(k)}</div><div class="v ${c}">${v.toLocaleString(LANG)}<small>${u}</small></div><div class="s">${T(s)}${k==="k_rain"&&STATE.mult!==1?` · ×${STATE.mult}`:""}</div></div>`).join("");
+}
+function renderClim(clim,s){
+  const rain=clim.map(r=>+r.rain_mm*(WET.includes(r.month)?STATE.mult:1)), et0=clim.map(r=>+r.et0_mm);
+  const labels=MONTHS[LANG];
+  const shade={id:"shade",beforeDraw(c){const {ctx,chartArea:a,scales:{x}}=c;if(!a)return;const w=x.getPixelForValue(1)-x.getPixelForValue(0);
+    ctx.save();ctx.fillStyle="rgba(96,165,250,.08)";ctx.fillRect(x.getPixelForValue(0)-w/2,a.top,w*4,a.bottom-a.top);
+    ctx.fillStyle="rgba(251,191,36,.06)";ctx.fillRect(x.getPixelForValue(5)-w/2,a.top,w*6,a.bottom-a.top);
+    ctx.fillStyle="#60a5fa";ctx.font="600 10px JetBrains Mono";ctx.fillText(T("wetseason").toUpperCase(),x.getPixelForValue(0)-w/2+6,a.top+12);
+    ctx.fillStyle="#fbbf24";ctx.fillText(T("dryseason").toUpperCase(),x.getPixelForValue(5)-w/2+6,a.top+12);ctx.restore();}};
+  if(climChart) climChart.destroy();
+  climChart=new Chart(document.getElementById("climChart"),{data:{labels,datasets:[
+    {type:"bar",label:T("rain"),data:rain,backgroundColor:"rgba(34,211,238,.55)",borderColor:"#22d3ee",borderWidth:1,borderRadius:6,order:2},
+    {type:"line",label:T("et0"),data:et0,borderColor:"#f87171",backgroundColor:"#f87171",tension:.35,pointRadius:3,borderWidth:2.5,order:1}]},
+    options:{maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{position:"bottom",labels:{boxWidth:12}}},
+      scales:{y:{title:{display:true,text:"mm"},grid:{color:"rgba(42,60,102,.35)"}},x:{grid:{display:false}}}},plugins:[shade]});
+  document.getElementById("climTag").textContent="NASA POWER · 2001–2025";
+  document.getElementById("climNote").innerHTML=T("clim_note",clim[0].source,clim[0].cell_elev_m,clim[0].field_elev_m)+(STATE.mult!==1?` <b class="c-amber">· ${T("wa_wet",STATE.mult)}</b>`:"");
+}
+function renderStrats(res){
+  const maxIrr=Math.max(...res.map(r=>r.irr),1), maxExp=Math.max(...res.map(r=>r.expMm),1);
+  const minIrr=Math.min(...res.map(r=>r.irr)), minExp=Math.min(...res.map(r=>r.expMm));
+  const col={rice:"var(--rice)",soybean:"var(--soy)",cover:"var(--cover)"};
+  document.getElementById("strats").innerHTML = res.map(r=>{
+    const s=r.st, tags=[];
+    if(s.id==="S0") tags.push(`<span class="badge c">${T("baseline")}</span>`);
+    if(r.irr===minIrr) tags.push(`<span class="badge g">▼ ${T("lowest_water")}</span>`);
+    if(r.expMm===minExp) tags.push(`<span class="badge g">▼ ${T("lowest_risk")}</span>`);
+    tags.push(`<span class="badge">${T("legume")}: ${T(r.legume?"yes":"no")}</span>`);
+    tags.push(`<span class="badge ${s.breaks==="yes"?"g":s.breaks==="partly"?"a":""}">${T("breaks")}: ${T(s.breaks)}</span>`);
+    const cal = MONTHS[LANG].map(m=>`<div class="h">${m[0]}</div>`).join("") + Array.from({length:12},(_,i)=>{const c=r.cal[i+1];
+      return `<div class="${WET.includes(i+1)?"wet":""}" style="background:${c?col[c.crop]:"var(--bare)"}" title="${M(i+1)}: ${c?T(c.crop):T("bare")}">${c?T(c.crop)[0]:""}</div>`}).join("");
+    const meter=(lbl,v,max,unit,color)=>`<div class="meter"><span>${lbl}</span><div class="bar"><b style="width:${Math.max(3,v/max*100)}%;background:${color}"></b></div><span class="val">${v}${unit}</span></div>`;
+    return `<div class="strat ${r.irr===minIrr||r.expMm===minExp?"best":""}">
+      <div class="code">${s.id}</div><h3>${s.name[LANG]}</h3><div class="badges">${tags.join("")}</div>
+      <div class="cal">${cal}</div>
+      ${meter(T("m_irr"),r.irr,maxIrr," mm","var(--amber)")}
+      ${meter(T("m_exp"),r.expMm,maxExp," mm","var(--red)")}
+      ${meter(T("m_bare"),r.bare,12,"","var(--dim)")}
+      ${s.id==="S2"?`<div class="small">ⓘ ${T("cover_gap")}</div>`:""}
+      <details><summary>${T("details")}</summary>
+        <p><b>${T("why")}.</b> ${s.why[LANG]}</p><p><b>${T("evidence")}.</b> ${s.evidence[LANG]}</p>
+        <p><b>${T("benefits")}.</b> ${s.benefits[LANG]}</p><p><b>${T("gaps")}.</b> ${s.gaps[LANG]}</p>
+        <p><b>${T("risks")}.</b> ${s.risks[LANG]}</p></details></div>`;
+  }).join("");
+}
+function floodOptions(clim){
+  const rain=byMonth(clim,"rain_mm"), et0=byMonth(clim,"et0_mm");
+  const p=STATE.rec%12+1;  // sow the month after the water goes down
+  return ["rice","soybean"].map(c=>{
+    const k=DATA.crops[c]||FALLBACK_CROPS[c];
+    const days = c==="rice" ? LOCAL_RICE_DAYS : (+k.cycle_days||85);
+    const n=Math.max(3,Math.round(days/30)), kcs=cropKc(c,n);
+    let need=0; const months=[];
+    for(let i=0;i<n;i++){const m=(p-1+i)%12+1; months.push(m); need+=Math.max(0,kcs[i]*et0[m]-rain[m]*(WET.includes(m)?STATE.mult:1));}
+    const flags=[];
+    const tol=String(k.flood_tolerance||"").toLowerCase();
+    flags.push(tol==="high"?["✅",T("f_tol")]:["⚠️",T("f_nottol")]);
+    if(c==="soybean" && rain[p]*(WET.includes(p)?STATE.mult:1)>100) flags.push(["🛑",T("f_wetsow")]);
+    if(need>150) flags.push(["💧",T("f_irr")]);
+    if(String(k.n_fixing).toLowerCase()==="yes") flags.push(["🌱",T("f_n")]);
+    return {c,days,n,months,need:Math.round(need),flags,harvest:months[months.length-1],p};
+  });
+}
+
+function renderFlood(clim){
+  document.getElementById("recMonths").innerHTML=[1,2,3,4,5,6].map(m=>`<button class="${m===STATE.rec?"on":""}" data-m="${m}">${M(m)}</button>`).join("");
+  document.querySelectorAll("#recMonths button").forEach(b=>b.onclick=()=>{STATE.rec=+b.dataset.m;renderAll();});
+  const opts=floodOptions(clim), p=opts[0].p, left=Math.max(0,4-p+1);
+  document.getElementById("recSummary").innerHTML=T("rec_sum",M(STATE.rec),M(p),left>0?T("rec_wet",left):T("rec_dry"));
+  const col={rice:"var(--rice)",soybean:"var(--soy)"};
+  document.getElementById("recOpts").innerHTML = opts.map(o=>`<div class="opt">
+     <div class="top2"><h4>${T(o.c)} · <span class="small mono">${T("f_cycle",o.days)}</span></h4>
+       <span class="mono small">${T("sow_in")} <b>${M(o.p)}</b> → ${T("harvest")} <b>${M(o.harvest)}</b> · ${T("water_need")} <b class="c-amber">${o.need} mm</b></span></div>
+     <div class="tl">${Array.from({length:12},(_,i)=>{const m=i+1,on=o.months.includes(m);return `<div class="${WET.includes(m)?"w":""} ${on?"on":""}" style="${on?`background:${col[o.c]}`:""}">${M(m).slice(0,1)}</div>`}).join("")}</div>
+     <div class="flags">${o.flags.map(([i,t])=>`<div class="flag"><span>${i}</span><span>${t}</span></div>`).join("")}</div></div>`).join("")
+     + `<div class="small">ⓘ ${T("cover_note")}</div>`;
+}
+function renderNdvi(){
+  const {dates,vals,smooth}=ndviSeries(STATE.site);
+  const note=document.getElementById("ndviNote");
+  if(ndviChart){ndviChart.destroy();ndviChart=null;}
+  if(!dates.length){note.textContent=T("ndvi_none");return;}
+  const ctx=document.getElementById("ndviChart").getContext("2d");
+  const grad=ctx.createLinearGradient(0,0,0,240);grad.addColorStop(0,"rgba(74,222,128,.35)");grad.addColorStop(1,"rgba(74,222,128,0)");
+  ndviChart=new Chart(ctx,{type:"line",data:{labels:dates,datasets:[
+    {label:T("ndvi_smooth"),data:smooth,borderColor:"#4ade80",backgroundColor:grad,fill:true,tension:.35,pointRadius:0,borderWidth:2.5},
+    {label:T("ndvi_raw"),data:vals,borderColor:"transparent",backgroundColor:"rgba(163,230,53,.55)",pointRadius:2.5,showLine:false}]},
+    options:{maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{position:"bottom",labels:{boxWidth:12}}},
+      scales:{y:{min:-0.1,max:1,grid:{color:"rgba(42,60,102,.35)"}},x:{grid:{display:false},ticks:{maxTicksLimit:9,callback:function(v){const d=this.getLabelForValue(v);return M(+d.slice(5,7))+" "+d.slice(2,4)}}}}}});
+  note.innerHTML=T("ndvi_note",smooth[smooth.length-1].toFixed(2),dates[dates.length-1]);
+}
+function summaryText(){
+  const s=DATA.sites.find(x=>x.site_id===STATE.site), clim=climFor(STATE.site);
+  const res=STRATS.map(st=>({st,...evaluate(st,clim,STATE.mult)})), fo=floodOptions(clim);
+  return [T("wa_head"),`${T("wa_zone")}: ${s.site_name}`,`${T("wa_scen")}: ${STATE.mult===1?T("wa_norm"):T("wa_wet",STATE.mult)}`,"",T("wa_s")+":",
+    ...res.map(r=>`• ${r.st.id} ${r.st.name[LANG]}: ${r.irr} mm · ${r.expMm} mm`),"",T("wa_flood",M(STATE.rec)),
+    ...fo.map(o=>`• ${T(o.c)}: ${T("sow_in").toLowerCase()} ${M(o.p)} → ${M(o.harvest)}, +${o.need} mm`),"",T("wa_foot"),"NASA POWER · MODIS · GIBS — "+location.href.split("#")[0]].join("\n");
+}
+function updateShare(){ document.getElementById("waBtn").href="https://wa.me/?text="+encodeURIComponent(summaryText()); }
+function toast(t){const e=document.getElementById("toast");e.textContent=t;e.classList.add("on");setTimeout(()=>e.classList.remove("on"),1800);}
+
+function applyLang(){
+  document.documentElement.lang=LANG;
+  document.querySelectorAll("[data-i18n]").forEach(e=>e.textContent=T(e.dataset.i18n));
+  document.querySelectorAll("[data-i18n-html]").forEach(e=>e.innerHTML=T(e.dataset.i18nHtml));
+  document.querySelectorAll(".lang button").forEach(b=>b.classList.toggle("on",b.dataset.lang===LANG));
+  if(map){renderLayerBar(); setOverlay(activeOverlay);}
+  if(STATE.site) renderAll();
+}
+
+(async function(){
+  document.getElementById("appName").textContent=APP_NAME;
+  const [clim,crops,ndvi]=await Promise.all([loadCSV("climate_monthly.csv"),loadCSV("crops.csv"),loadCSV("ndvi_timeseries.csv")]);
+  DATA.clim=(clim||[]).map(r=>{for(const k in r) if(r[k]===-999) r[k]=null; return r;});
+  (crops||[]).forEach(c=>DATA.crops[c.crop]=c);
+  for(const k in FALLBACK_CROPS) if(!DATA.crops[k]) DATA.crops[k]=FALLBACK_CROPS[k];
+  DATA.ndvi=ndvi||[];
+  const seen={}; DATA.sites=DATA.clim.filter(r=>!seen[r.site_id]&&(seen[r.site_id]=1));
+  document.getElementById("chipPower").classList.add(clim?"ok":"warn");
+  document.getElementById("chipNdvi").classList.add(ndvi?"ok":"warn");
+  if(!DATA.sites.length){document.querySelector(".hero").insertAdjacentHTML("beforeend",'<div class="alert">Data could not be loaded.</div>');return;}
+  STATE.site=DATA.sites[0].site_id;
+  initMap(); renderZones(); selectSite(STATE.site);
+  setTimeout(()=>{map.invalidateSize();const s0=DATA.sites.find(x=>x.site_id===STATE.site);map.setView([s0.lat,s0.lon],10);},400);
+  document.querySelectorAll(".lang button").forEach(b=>b.onclick=()=>{LANG=b.dataset.lang;applyLang();});
+  document.querySelectorAll("#scen button").forEach(b=>b.onclick=()=>{
+    document.querySelectorAll("#scen button").forEach(x=>x.classList.toggle("on",x===b));
+    const wet=b.dataset.v!=="1"; document.getElementById("multBox").style.display=wet?"block":"none";
+    STATE.mult=wet?STATE.multWet:1; renderAll();});
+  document.getElementById("mult").oninput=e=>{STATE.multWet=+e.target.value;STATE.mult=STATE.multWet;document.getElementById("multVal").textContent=STATE.multWet;renderAll();};
+  document.getElementById("copyBtn").onclick=async()=>{try{await navigator.clipboard.writeText(summaryText());toast(T("copied"));}catch(e){prompt("",summaryText());}};
+  const qLang=new URLSearchParams(location.search).get("lang"); if(qLang==="es"){LANG="es";applyLang();}
+})();
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>WARPDRIVE · Flood-aware rice planner · NASA Space Apps 2026</title>
 <meta name="description" content="Flood-aware crop rotation planner for smallholder rice farmers in Guayas and Los Ríos, Ecuador, built on NASA POWER, MODIS and GIBS data.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
