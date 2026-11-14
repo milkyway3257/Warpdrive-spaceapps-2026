@@ -335,7 +335,7 @@ const I18N = {
   meta:(lat,lon,ce)=>`Point ${lat}, ${lon} · NASA POWER cell elevation ${ce} m`,
   shared_cell:"Daule, Salitre and Samborondón fall in the same NASA POWER grid cell (~50 km), so their climate is almost identical; NDVI (250 m) is what tells them apart.",
   lyr_true:"True color",lyr_flood:"Flood (3-day)",lyr_ndvi:"NDVI 16-day",lyr_hazard:"Flood hazard 1985–2003",lyr_rain:"Rain now (IMERG)",lyr_hi:"High-res base",
-  leg_flood:"Flood water detected (MODIS NRT)",leg_ndvi:"Greener = more vegetation",leg_hazard:"Historical flood frequency (darker = more often)",leg_rain:"Precipitation rate",
+  leg_flood:"Red = flood water · blue = normal water · gray = no data (clouds) · MODIS near real time",leg_ndvi:"Greener = more vegetation",leg_hazard:"Historical flood frequency (darker = more often)",leg_rain:"Precipitation rate",
   wa_head:"🌾 Rice plan from NASA data",wa_zone:"Zone",wa_scen:"Scenario",wa_norm:"normal climate",wa_wet:m=>`wetter than normal (×${m}, what-if)`,
   wa_s:"Strategies (dry-season irrigation · rain on cash crop Jan–Apr)",wa_flood:m=>`If the water went down in ${m}:`,wa_foot:"Options to review with a local technician, not instructions."},
  es:{tagline_small:"FIELD SHIFT · NASA SPACE APPS 2026",eyebrow:"Guayas y Los Ríos · Ecuador · pequeño arrocero",
@@ -374,7 +374,7 @@ const I18N = {
   meta:(lat,lon,ce)=>`Punto ${lat}, ${lon} · altura del cuadro NASA POWER ${ce} m`,
   shared_cell:"Daule, Salitre y Samborondón caen en el mismo cuadro de NASA POWER (~50 km), así que su clima es casi igual; el NDVI (250 m) es lo que las diferencia.",
   lyr_true:"Color real",lyr_flood:"Inundación (3 días)",lyr_ndvi:"NDVI 16 días",lyr_hazard:"Riesgo de inundación 1985–2003",lyr_rain:"Lluvia ahora (IMERG)",lyr_hi:"Mapa detallado",
-  leg_flood:"Agua de inundación detectada (MODIS casi en tiempo real)",leg_ndvi:"Más verde = más vegetación",leg_hazard:"Frecuencia histórica de inundación (más oscuro = más seguido)",leg_rain:"Intensidad de lluvia",
+  leg_flood:"Rojo = inundación · azul = agua normal · gris = sin dato (nubes) · MODIS casi en tiempo real",leg_ndvi:"Más verde = más vegetación",leg_hazard:"Frecuencia histórica de inundación (más oscuro = más seguido)",leg_rain:"Intensidad de lluvia",
   wa_head:"🌾 Plan de arroz con datos de la NASA",wa_zone:"Zona",wa_scen:"Escenario",wa_norm:"clima normal",wa_wet:m=>`más lluvioso que lo normal (×${m}, escenario)`,
   wa_s:"Estrategias (riego en verano · lluvia sobre el cultivo ene–abr)",wa_flood:m=>`Si el agua bajó en ${m}:`,wa_foot:"Opciones para revisar con un técnico local, no son instrucciones."}
 };
@@ -477,7 +477,7 @@ const LAYERS = [
   {id:"hazard", k:"lyr_hazard", url:()=>GIBS("NDH_Flood_Hazard_Frequency_Distribution_1985-2003","GoogleMapsCompatible_Level7","png",""), z:7, leg:"leg_hazard", legc:"linear-gradient(90deg,#bfdbfe,#1d4ed8)"},
   {id:"rain", k:"lyr_rain", url:t=>GIBS("IMERG_Precipitation_Rate","GoogleMapsCompatible_Level6","png",t), z:6, time:true, leg:"leg_rain", legc:"linear-gradient(90deg,#22d3ee,#a78bfa,#f472b6)"}
 ];
-let activeBase="true", activeOverlay="flood", overlayDate=yday();
+let activeBase="hi", activeOverlay="ndvi", overlayDate=yday();
 
 function initMap(){
   map = L.map("map",{zoomControl:true,attributionControl:true,worldCopyJump:false}).setView([-1.86,-79.78],9);
@@ -485,7 +485,7 @@ function initMap(){
     {maxNativeZoom:9,maxZoom:15,attribution:'Imagery: NASA GIBS / EOSDIS'});
   hiBase = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
     {maxZoom:17,attribution:'Base: Esri World Imagery'});
-  base.addTo(map);
+  (activeBase==="hi"?hiBase:base).addTo(map);
   DATA.sites.forEach(s=>{
     const icon=L.divIcon({className:"",html:`<div class="pin" id="pin-${s.site_id}"></div>`,iconSize:[18,18],iconAnchor:[9,9]});
     pins[s.site_id]=L.marker([s.lat,s.lon],{icon}).addTo(map).on("click",()=>selectSite(s.site_id))
@@ -529,7 +529,7 @@ function renderZones(){
 function selectSite(id){
   STATE.site=id; renderZones();
   Object.keys(pins).forEach(k=>document.getElementById("pin-"+k)?.classList.toggle("on",k===id));
-  const s=DATA.sites.find(x=>x.site_id===id); if(map) map.flyTo([s.lat,s.lon],10,{duration:.8});
+  const s=DATA.sites.find(x=>x.site_id===id); if(map){map.invalidateSize(); map.setView([s.lat,s.lon],10,{animate:true});}
   renderAll();
 }
 function renderAll(){
@@ -671,6 +671,7 @@ function applyLang(){
   if(!DATA.sites.length){document.querySelector(".hero").insertAdjacentHTML("beforeend",'<div class="alert">Data could not be loaded.</div>');return;}
   STATE.site=DATA.sites[0].site_id;
   initMap(); renderZones(); selectSite(STATE.site);
+  setTimeout(()=>{map.invalidateSize();const s0=DATA.sites.find(x=>x.site_id===STATE.site);map.setView([s0.lat,s0.lon],10);},400);
   document.querySelectorAll(".lang button").forEach(b=>b.onclick=()=>{LANG=b.dataset.lang;applyLang();});
   document.querySelectorAll("#scen button").forEach(b=>b.onclick=()=>{
     document.querySelectorAll("#scen button").forEach(x=>x.classList.toggle("on",x===b));
