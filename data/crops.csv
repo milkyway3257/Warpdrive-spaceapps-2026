@@ -1,0 +1,5 @@
+crop,crop_es,family,cycle_days,kc_ini,kc_mid,kc_end,t_min_c,t_max_c,rain_min_mm,rain_max_mm,n_fixing,root_depth,drought_tolerance,flood_tolerance,main_use,source_url
+rice,arroz,Poaceae,180,1.05,1.20,0.90,10,36,1000,4000,no,medium,low,high,food,"https://www.fao.org/4/x0490e/x0490e0b.htm; https://ecocrop.apps.fao.org/ecocrop/srv/en/dataSheet?id=1574"
+soybean,soya,Fabaceae,85,0.40,1.15,0.50,10,38,450,1800,yes,deep,medium,low,market,"https://www.fao.org/4/x0490e/x0490e0b.htm; https://gaez.fao.org/pages/ecocrop"
+sesbania_rostrata,sesbania,Fabaceae,,,,,,,,,yes,,,high,cover,https://books.irri.org/9789712202322_content.pdf
+azolla,azolla,Salviniaceae,,,,,,,,,yes,,low,high,cover,https://www.fao.org/4/a0443e/a0443e.pdf
