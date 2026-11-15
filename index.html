@@ -1278,7 +1278,7 @@ function renderSimple(){
     box.querySelectorAll(".months6 button").forEach(b=>b.onclick=()=>{STATE.rec=+b.dataset.m;renderAll();});
   }
   const ha=+(lsGet("ss_ha")||0);
-  const farm=(SS.need==="plan"&&ha>0)?`<div class="keyfact">${T("farm_line",ha,fmt1(ha*(res[0].irr-res[1].irr)/100))}</div>`:"";
+  const farm=(SS.need==="plan"&&ha>0)?`<div class="keyfact">${T("farm_line",fmt1(ha),fmt1(ha*(res[0].irr-res[1].irr)/100))}</div>`:"";
   const scen=(SS.need==="plan"&&SS.nino)?`<div class="scen"><div class="lbl">${T("sc_t")}</div>
     <div class="scrow"><b>${T("sc1")}</b><span>${T("sc1a")}</span></div>
     <div class="scrow"><b>${T("sc2")}</b><span>${T("sc2a")}</span></div>
