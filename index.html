@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SafeSow · Flood-aware rice planner · NASA Space Apps 2026</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E🌾%3C/text%3E%3C/svg%3E">
 <meta name="description" content="Flood-aware crop rotation planner for smallholder rice farmers in Guayas and Los Ríos, Ecuador, built on NASA POWER, MODIS and GIBS data.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@700;800;900&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -357,6 +358,8 @@ footer h5{font-family:var(--sans);letter-spacing:0;text-transform:none;font-size
 .lotx{border:0;background:none;font-size:22px;cursor:pointer;padding:6px}
 .lothelp{margin:6px 0 10px;font-size:16px}
 #lotMap{height:min(58vh,460px);border-radius:12px}
+.lotdate{margin-top:6px;font-size:14px}
+@media(max-width:600px){#lotMap{height:42vh}.lotcard{padding:10px}.lothelp{font-size:15px;margin:4px 0 8px}.lotarea{font-size:17px;margin:6px 0}.lotbtns{gap:6px}.lotbtns button{flex:1 1 45%;padding:9px;font-size:14px}}
 .lotarea{margin:10px 0;font-size:20px;font-weight:700}
 .lotbtns{display:flex;flex-wrap:wrap;gap:8px}
 .lotbtns button{flex:1 1 140px;padding:12px;font:700 15px var(--sans);border-radius:10px;border:1.5px solid #9DB89A;background:#fff;cursor:pointer}
@@ -418,6 +421,7 @@ footer h5{font-family:var(--sans);letter-spacing:0;text-transform:none;font-size
       <div class="lothead"><b data-i18n="lot_t">Mark your plot</b><button type="button" class="lotx" id="lotClose" aria-label="Close">✖</button></div>
       <p class="lothelp" data-i18n="lot_help">Tap the corners of your plot on the satellite photo. Or walk around its edge with your phone.</p>
       <div id="lotMap"></div>
+      <div class="lotdate" id="lotDate"></div>
       <div class="lotarea" id="lotArea"></div>
       <div class="lotbtns">
         <button type="button" id="lotMe" data-i18n="lot_me">📍 Go to where I am</button>
@@ -730,6 +734,7 @@ Object.assign(I18N.en,{farm_q:"How many hectares do you sow? (optional)",
  farm_line:(ha,l)=>`🏡 On your <b>${ha} ha</b>: switching the dry season to soybean saves ≈ <b>${l} million litres</b> of irrigation water a year.`,
  fc_t:"⏱️ Next 12 hours here:",fc_heavy:mm=>`~<b>${mm} mm</b> of rain expected — heavy. Don't spray or fertilize today; check your drains.`,fc_rain:mm=>`~<b>${mm} mm</b> of rain expected.`,fc_dry:"no rain expected.",
  fc_src:"12-hour forecast from NOAA GFS and ECMWF models, via",
+ img_date:(d,old)=>`📷 Satellite photo from <b>${d}</b> (Esri). Not live.${old?" ⚠️ It is old: your plot may look different today.":""}`,photo:"photo from",
  lot_btn:"🗺️ Mark my plot on the map",lot_t:"Mark your plot",lot_help:"Tap the corners of your plot on the satellite photo. Or walk around its edge with your phone.",
  lot_me:"📍 Go to where I am",lot_walk:"🚶 Walk the edge (GPS)",lot_stop:"⏹️ Stop walking",lot_undo:"↩️ Undo",lot_clear:"🗑️ Start over",lot_ok:"✅ Done",
  lot_area:ha=>`Area: ${ha} ha`,lot_need:"Mark at least 3 corners.",lot_nogps:"Location not available. Allow location, or tap the corners.",
@@ -744,6 +749,7 @@ Object.assign(I18N.es,{farm_q:"¿Cuántas hectáreas siembras? (opcional)",
  farm_line:(ha,l)=>`🏡 En tus <b>${ha} ha</b>: cambiar el verano a soya ahorra ≈ <b>${l} millones de litros</b> de riego al año.`,
  fc_t:"⏱️ Próximas 12 horas aquí:",fc_heavy:mm=>`se esperan ~<b>${mm} mm</b> de lluvia — fuerte. Hoy no fumigues ni abones; revisa tus drenajes.`,fc_rain:mm=>`se esperan ~<b>${mm} mm</b> de lluvia.`,fc_dry:"no se espera lluvia.",
  fc_src:"Pronóstico de 12 horas de los modelos NOAA GFS y ECMWF, vía",
+ img_date:(d,old)=>`📷 Foto satelital del <b>${d}</b> (Esri). No es en vivo.${old?" ⚠️ Es antigua: tu lote puede verse distinto hoy.":""}`,photo:"foto de",
  lot_btn:"🗺️ Marcar mi lote en el mapa",lot_t:"Marca tu lote",lot_help:"Toca las esquinas de tu lote sobre la foto satelital. O camina por el borde con tu celular.",
  lot_me:"📍 Ir a donde estoy",lot_walk:"🚶 Caminar el borde (GPS)",lot_stop:"⏹️ Terminar caminata",lot_undo:"↩️ Deshacer",lot_clear:"🗑️ Empezar de nuevo",lot_ok:"✅ Listo",
  lot_area:ha=>`Área: ${ha} ha`,lot_need:"Marca al menos 3 esquinas.",lot_nogps:"No se pudo ver tu ubicación. Permite la ubicación o toca las esquinas.",
@@ -899,11 +905,11 @@ const LEARN = [
  {ic:"🔁", t:{en:"What is crop rotation?",es:"¿Qué es rotar cultivos?"},
   p:{en:"Planting different crops on the same field in different seasons, instead of rice after rice. It breaks the cycle of pests and diseases and gives the soil a rest.",
      es:"Es sembrar cultivos distintos en el mismo terreno en distintas épocas, en vez de arroz tras arroz. Corta el ciclo de plagas y enfermedades y le da un descanso al suelo."},
-  src:{n:"Caicedo-Camposano et al., Killkana Técnica (rice–soybean, Babahoyo)",u:"https://killkana.ucacue.edu.ec/index.php/killkana_tecnico/article/view/472"}},
+  src:{n:{en:"Caicedo-Camposano et al., Killkana Técnica (rice–soybean, Babahoyo)",es:"Caicedo-Camposano et al., Killkana Técnica (arroz–soya, Babahoyo)"},u:"https://killkana.ucacue.edu.ec/index.php/killkana_tecnico/article/view/472"}},
  {ic:"🫘", t:{en:"Why soybean helps",es:"¿Por qué ayuda la soya?"},
   p:{en:"Soybean is a legume: with soil bacteria it takes nitrogen from the air and leaves some in the soil for the next rice. In Daule it also needs about a quarter less water than dry-season rice. Never sow it in waterlogged soil.",
      es:"La soya es una leguminosa: con ayuda de bacterias del suelo toma nitrógeno del aire y deja parte en la tierra para el próximo arroz. En Daule además pide cerca de un cuarto menos de agua que el arroz de verano. Nunca la siembres en suelo encharcado."},
-  src:{n:"INIAP — soybean establishment guide",u:"https://tecnologia.iniap.gob.ec/wp-content/uploads/2023/11/4cultivo-11.pdf"}},
+  src:{n:{en:"INIAP — soybean establishment guide",es:"INIAP — guía para sembrar soya"},u:"https://tecnologia.iniap.gob.ec/wp-content/uploads/2023/11/4cultivo-11.pdf"}},
  {ic:"🌊", t:{en:"When rice goes under water",es:"Cuando el arroz queda bajo el agua"},
   p:{en:"Rice likes shallow water, but most varieties die if the whole plant stays under water for about a week. Young plants are the most fragile. In Asia, special varieties (called Sub1) survive up to two weeks.",
      es:"Al arroz le gusta el agua poco profunda, pero la mayoría de variedades muere si la planta queda totalmente tapada por el agua cerca de una semana. Las plantas tiernas son las más frágiles. En Asia existen variedades especiales (llamadas Sub1) que aguantan hasta dos semanas."},
@@ -995,6 +1001,17 @@ async function loadForecast(site){
     el.innerHTML=`<b>${T("fc_t")}</b> ${mm>=10?T("fc_heavy",fmt(mm)):mm>=1?T("fc_rain",fmt1(mm)):T("fc_dry")} <span class="src">${T("fc_src")} <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">Open-Meteo</a></span>`;
   }catch(e){}
 }
+const IMGD={};
+async function imgDate(lat,lon){
+  const k=lat.toFixed(3)+","+lon.toFixed(3); if(k in IMGD) return IMGD[k];
+  try{const ext=[lon-.01,lat-.01,lon+.01,lat+.01].join(",");
+    const j=await (await fetch(`https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/identify?geometry=${lon},${lat}&geometryType=esriGeometryPoint&sr=4326&layers=all&tolerance=2&mapExtent=${ext}&imageDisplay=600,600,96&returnGeometry=false&f=json`)).json();
+    const r=(j.results||[]).find(x=>x.attributes&&/^\d+\/\d+\/\d{4}$/.test(x.attributes.SRC_DATE2||""));
+    if(!r) return IMGD[k]=null; const [m,d,y]=r.attributes.SRC_DATE2.split("/").map(Number); return IMGD[k]=new Date(y,m-1,d);
+  }catch(e){return IMGD[k]=null}
+}
+const fmtD=dt=>dt.toLocaleDateString(LANG==="es"?"es-EC":"en-US",{day:"numeric",month:"short",year:"numeric"});
+async function lotDateShow(){const el=document.getElementById("lotDate"); if(!el||!LOT.map) return; const c=LOT.map.getCenter(); const dt=await imgDate(c.lat,c.lng); el.innerHTML=dt?T("img_date",fmtD(dt),(Date.now()-dt)>2*3.156e10):"";}
 const LOT={pts:[],map:null,poly:null,marks:null,watch:null,proPoly:null};
 function lotHa(pts){ // geodesic polygon area, m2 -> ha
   if(pts.length<3) return 0; const R=6378137,rad=Math.PI/180; let a=0;
@@ -1017,7 +1034,7 @@ function lotOpen(){
   if(!LOT.map){
     LOT.map=L.map("lotMap",{zoomControl:true}).setView(paddyPoint(STATE.site)||[-1.878,-79.945],16);
     L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,maxNativeZoom:18,attribution:"Esri World Imagery"}).addTo(LOT.map);
-    LOT.marks=L.layerGroup().addTo(LOT.map);
+    LOT.marks=L.layerGroup().addTo(LOT.map); LOT.map.on("moveend",lotDateShow);
     LOT.map.on("click",e=>{if(LOT.watch!==null) return; LOT.pts.push([e.latlng.lat,e.latlng.lng]); lotDraw();});
     document.getElementById("lotClose").onclick=lotClose;
     document.getElementById("lotUndo").onclick=()=>{LOT.pts.pop();lotDraw();};
@@ -1034,7 +1051,7 @@ function lotOpen(){
       },()=>{lotStopWalk();alert(T("lot_nogps"));},{enableHighAccuracy:true,maximumAge:0,timeout:20000}); };
     document.getElementById("lotOk").onclick=lotSave;
   } else if(!LOT.pts.length){ LOT.map.setView(paddyPoint(STATE.site)||LOT.map.getCenter(),16); }
-  setTimeout(()=>{LOT.map.invalidateSize(); if(LOT.pts.length>=3) LOT.map.fitBounds(LOT.pts,{padding:[30,30]});},150);
+  setTimeout(()=>{LOT.map.invalidateSize(); if(LOT.pts.length>=3) LOT.map.fitBounds(LOT.pts,{padding:[30,30]}); lotDateShow();},150);
   lotDraw();
 }
 function lotClose(){ lotStopWalk(); document.getElementById("lotModal").hidden=true; }
@@ -1068,6 +1085,7 @@ function renderSimple(){
   if(!STATE.site) return;
   const site=DATA.sites.find(x=>x.site_id===STATE.site), zn=site.site_name.split(",")[0];
   document.getElementById("heroCap").textContent=T("hero_cap",zn);
+  const hp=paddyPoint(STATE.site); if(hp) imgDate(hp[0],hp[1]).then(dt=>{if(dt&&STATE.site===site.site_id) document.getElementById("heroCap").textContent=T("hero_cap",zn)+" · "+T("photo")+" "+fmtD(dt);});
   document.getElementById("sZones").innerHTML=DATA.sites.map(s=>`<button class="bigbtn ${s.site_id===STATE.site?"on":""}" data-s="${s.site_id}">📍 ${s.site_name.split(",")[0]}<small>${(s.site_name.split(",")[1]||"").trim()}</small></button>`).join("");
   document.querySelectorAll("#sZones .bigbtn").forEach(b=>b.onclick=()=>selectSite(b.dataset.s));
   document.getElementById("sNeed").innerHTML=[["plan","s_plan","s_plan_s"],["flood","s_flood","s_flood_s"]].map(([k,a,b])=>`<button class="bigbtn ${SS.need===k?"on":""}" data-k="${k}">${T(a)}<small>${T(b)}</small></button>`).join("");
@@ -1275,6 +1293,7 @@ function applyLang(){
   for(const k in FALLBACK_CROPS) if(!DATA.crops[k]) DATA.crops[k]=FALLBACK_CROPS[k];
   DATA.ndvi=ndvi||[];
   const seen={}; DATA.sites=DATA.clim.filter(r=>!seen[r.site_id]&&(seen[r.site_id]=1));
+  DATA.sites.forEach(x=>x.site_name=x.site_name.replace("Samborondon","Samborondón").replace("Los Rios","Los Ríos"));
   document.getElementById("chipPower").classList.add(clim?"ok":"warn");
   document.getElementById("chipNdvi").classList.add(ndvi?"ok":"warn");
   if(!DATA.sites.length){document.querySelector(".hero").insertAdjacentHTML("beforeend",'<div class="alert">Data could not be loaded.</div>');return;}
