@@ -376,6 +376,11 @@ footer h5{font-family:var(--sans);letter-spacing:0;text-transform:none;font-size
 .fc-btns a,.fc-btns button{flex:1 1 140px;text-align:center;padding:11px;border-radius:10px;font:700 15px var(--sans);border:1.5px solid #3D5A47;background:#1C3326;color:#E8F0E6;cursor:pointer;text-decoration:none}
 .fc-btns button.warn{background:#C4301C;border-color:#C4301C}
 .fc-priv{padding:0 16px 14px;font-size:13px;color:#A3B7A9}
+.fc-tabs{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px 0}
+.fc-tabs button{padding:7px 12px;border-radius:999px;border:1.5px solid #3D5A47;background:#1C3326;color:#E8F0E6;font:700 13px var(--sans);cursor:pointer}
+.fc-tabs button.on{background:#FFD23F;color:#13241A;border-color:#FFD23F}
+.fc-name{font:700 15px var(--sans);color:#FFD23F;margin-bottom:4px}
+.fc-btns button.add{background:#2E6B30;border-color:#2E6B30}
 @media(max-width:600px){.fc-body{grid-template-columns:1fr}.fc-big{font-size:56px}}
 .lotzone{margin-top:6px;padding:8px 12px;border-radius:10px;background:#E4EFE1;font-size:16px}
 .lotzone.out{background:#FCEBD0}
@@ -778,6 +783,7 @@ Object.assign(I18N.en,{farm_q:"How many hectares do you sow? (optional)",
  zone_out:(z,km)=>`📍 Outside SafeSow's 4 zones. Nearest: <b>${z}</b> (${km} km away). Area and height still work.`,
  gps_wait:"📡 Looking for GPS signal… walk slowly.",gps_weak:a=>`📡 Weak GPS signal (± ${a} m). Go to an open area.`,
  me_wait:"📍 Finding where you are…",
+ fc_total:(t,n)=>`Total: ${t} ha in ${n} plots`,fc_add:"➕ Add another plot",lot_n:n=>`Plot ${n}`,lot_new:n=>`New plot (Plot ${n})`,lot_editing:x=>`Editing: ${x}`,
  fc_title:"My farm",fc_saved:d=>`Saved ${d}`,fc_out:"Outside SafeSow's 4 zones",
  fc_low:m=>`<b>Low plot</b>: ≈${m} m lower than its surroundings`,fc_high:m=>`<b>High plot</b>: ≈${m} m higher than its surroundings`,
  fc_same:"About as high as its surroundings",fc_nolvl:"Height pending: tap Edit → Done when you have internet",
@@ -810,6 +816,7 @@ Object.assign(I18N.es,{farm_q:"¿Cuántas hectáreas siembras? (opcional)",
  zone_out:(z,km)=>`📍 Fuera de las 4 zonas de SafeSow. Lo más cercano: <b>${z}</b> (a ${km} km). El área y la altura sí funcionan.`,
  gps_wait:"📡 Buscando señal GPS… camina despacio.",gps_weak:a=>`📡 Señal GPS débil (± ${a} m). Ve a un lugar abierto.`,
  me_wait:"📍 Buscando dónde estás…",
+ fc_total:(t,n)=>`Total: ${t} ha en ${n} lotes`,fc_add:"➕ Agregar otro lote",lot_n:n=>`Lote ${n}`,lot_new:n=>`Nuevo lote (Lote ${n})`,lot_editing:x=>`Editando: ${x}`,
  fc_title:"Mi finca",fc_saved:d=>`Guardado el ${d}`,fc_out:"Fuera de las 4 zonas de SafeSow",
  fc_low:m=>`<b>Lote bajo</b>: ≈${m} m más bajo que su alrededor`,fc_high:m=>`<b>Lote alto</b>: ≈${m} m más alto que su alrededor`,
  fc_same:"A la misma altura que su alrededor",fc_nolvl:"Altura pendiente: toca Editar → Listo cuando tengas internet",
@@ -1083,37 +1090,53 @@ function nearestSite(lat,lon){let best=null;DATA.sites.forEach(x=>{const d=L.lat
 function lotZoneShow(){const el=document.getElementById("lotZone"); if(!el||!LOT.map) return; const c=LOT.map.getCenter(), n=nearestSite(c.lat,c.lng); if(!n) return;
   const z=n.s.site_name; el.classList.toggle("out",n.d>ZONE_KM); el.innerHTML=n.d>ZONE_KM?T("zone_out",z,fmt(n.d)):T("zone_in",z);}
 function lotMsg(t){document.getElementById("lotArea").textContent=t;}
+function lotsSet(a){lsSet("ss_lots",JSON.stringify(a)); const tot=Math.round(a.reduce((s,x)=>s+(x.ha||0),0)*10)/10;
+  if(a.length) lsSet("ss_ha",String(tot)); else {try{localStorage.removeItem("ss_ha")}catch(e){}}}
+function lotsGet(){let a=null; try{a=JSON.parse(lsGet("ss_lots")||"null")}catch(e){}
+  if(!Array.isArray(a)){ a=[]; let o=null; try{o=JSON.parse(lsGet("ss_lot")||"null")}catch(e){}
+    if(o&&o.pts&&o.pts.length>=3) a.push(Object.assign({id:Date.now(),name:null},o));
+    lotsSet(a); try{localStorage.removeItem("ss_lot")}catch(e){} }
+  return a;}
+function lotActive(){const a=lotsGet(); if(!a.length) return null; const id=+lsGet("ss_lot_act"); return a.find(x=>x.id===id)||a[0];}
+function lotName(x,a){return x.name||T("lot_n",(a||lotsGet()).findIndex(y=>y.id===x.id)+1);}
 let FC_KEY="", FC_MAP=null;
 function renderFarmCard(){
   const el=document.getElementById("farmCard"), btn=document.getElementById("lotBtn"); if(!el) return;
-  let sv=null; try{sv=JSON.parse(lsGet("ss_lot")||"null")}catch(e){}
-  if(!sv||!sv.pts||sv.pts.length<3){el.hidden=true; el.innerHTML=""; btn.hidden=false; if(FC_MAP){FC_MAP.remove();FC_MAP=null;} FC_KEY=""; return;}
-  const key=JSON.stringify(sv)+LANG; if(key===FC_KEY&&!el.hidden) return; FC_KEY=key;
+  const all=lotsGet(), sv=lotActive();
+  if(!sv){el.hidden=true; el.innerHTML=""; btn.hidden=false; if(FC_MAP){FC_MAP.remove();FC_MAP=null;} FC_KEY=""; return;}
+  const key=JSON.stringify(all)+sv.id+LANG; if(key===FC_KEY&&!el.hidden) return; FC_KEY=key;
   btn.hidden=true; el.hidden=false;
   const n=sv.pts.length, c=[sv.pts.reduce((a,p)=>a+p[0],0)/n, sv.pts.reduce((a,p)=>a+p[1],0)/n], ns=nearestSite(c[0],c[1]);
   const inZone=ns&&ns.d<=ZONE_KM, zone=inZone?ns.s.site_name:T("fc_out");
   const clim=climFor(inZone?ns.s.site_id:STATE.site), r0=evaluate(STRATS[0],clim,1), r1=evaluate(STRATS[1],clim,1);
   const r=sv.rel, lvl=r==null?T("fc_nolvl"):r<=-1?T("fc_low",fmt1(-r)):r>=1?T("fc_high",fmt1(r)):T("fc_same");
   const when=sv.t?new Date(sv.t).toLocaleDateString(LANG==="es"?"es-EC":"en-US",{day:"numeric",month:"short",year:"numeric"}):"";
-  el.innerHTML=`<div class="fc-head"><b>🏡 ${T("fc_title")}</b><span>${when?T("fc_saved",when):""}</span></div>
-    <div class="fc-body"><div id="fcMap" role="img" aria-label="${T("fc_title")}"></div>
-      <div><div class="fc-big">${fmt1(sv.ha)}<small>ha</small></div>
+  const tot=all.reduce((s,x)=>s+(x.ha||0),0);
+  const tabs=all.length>1?`<div class="fc-tabs">${all.map(x=>`<button type="button" class="${x.id===sv.id?"on":""}" data-id="${x.id}">${lotName(x,all)} · ${fmt1(x.ha)} ha</button>`).join("")}</div>`:"";
+  el.innerHTML=`<div class="fc-head"><b>🏡 ${T("fc_title")}</b><span>${all.length>1?T("fc_total",fmt1(tot),all.length):(when?T("fc_saved",when):"")}</span></div>${tabs}
+    <div class="fc-body"><div id="fcMap" role="img" aria-label="${lotName(sv,all)}"></div>
+      <div><div class="fc-name">${lotName(sv,all)}${all.length>1&&when?" · "+when:""}</div><div class="fc-big">${fmt1(sv.ha)}<small>ha</small></div>
         <div class="fc-row"><span>📍</span><span>${zone}</span></div>
         <div class="fc-row"><span>⛰️</span><span>${lvl}</span></div>
         <div class="fc-row"><span>💧</span><span>${T("fc_water",fmt1(sv.ha*(r0.irr-r1.irr)/100))}</span></div>
         <div class="fc-row"><span>🧭</span><span class="mono">${c[0].toFixed(5)}, ${c[1].toFixed(5)}</span></div></div></div>
-    <div class="fc-btns"><a href="https://www.google.com/maps?q=${c[0].toFixed(6)},${c[1].toFixed(6)}" target="_blank" rel="noopener">${T("fc_gmaps")}</a>
+    <div class="fc-btns"><button type="button" class="add" id="fcAdd">${T("fc_add")}</button>
+      <a href="https://www.google.com/maps?q=${c[0].toFixed(6)},${c[1].toFixed(6)}" target="_blank" rel="noopener">${T("fc_gmaps")}</a>
       <button type="button" id="fcEdit">${T("fc_edit")}</button><button type="button" id="fcDel">${T("fc_del")}</button></div>
     <div class="fc-priv">${T("fc_priv")}</div>`;
-  document.getElementById("fcEdit").onclick=lotOpen;
+  el.querySelectorAll(".fc-tabs button").forEach(b=>b.onclick=()=>{lsSet("ss_lot_act",b.dataset.id); FC_KEY=""; renderSimple();});
+  document.getElementById("fcAdd").onclick=()=>lotOpen(true);
+  document.getElementById("fcEdit").onclick=()=>lotOpen(false);
   const del=document.getElementById("fcDel");
   del.onclick=()=>{ if(!del.classList.contains("warn")){del.classList.add("warn");del.textContent=T("fc_del2");setTimeout(()=>{if(del.isConnected){del.classList.remove("warn");del.textContent=T("fc_del");}},4000);return;}
-    try{localStorage.removeItem("ss_lot");localStorage.removeItem("ss_ha");}catch(e){} const hi=document.getElementById("haIn"); if(hi) hi.value="";
-    lotShowPro(); renderSimple(); };
+    const rest=lotsGet().filter(x=>x.id!==sv.id); lotsSet(rest); if(rest.length) lsSet("ss_lot_act",String(rest[0].id));
+    const hi=document.getElementById("haIn"); if(hi) hi.value=lsGet("ss_ha")||"";
+    FC_KEY=""; lotShowPro(); renderSimple(); };
   if(FC_MAP){FC_MAP.remove();FC_MAP=null;}
   FC_MAP=L.map("fcMap",{zoomControl:false,dragging:false,scrollWheelZoom:false,doubleClickZoom:false,touchZoom:false,boxZoom:false,keyboard:false});
   L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,maxNativeZoom:18,attribution:"Esri"}).addTo(FC_MAP);
-  const poly=L.polygon(sv.pts,{color:"#FFD23F",weight:3,fillOpacity:.25}).addTo(FC_MAP);
+  all.filter(x=>x.id!==sv.id).forEach(x=>L.polygon(x.pts,{color:"#fff",weight:2,dashArray:"4 4",fillOpacity:.1,interactive:false}).addTo(FC_MAP));
+  const poly=L.polygon(sv.pts,{color:"#FFD23F",weight:3,fillOpacity:.25,interactive:false}).addTo(FC_MAP);
   FC_MAP.fitBounds(poly.getBounds(),{padding:[18,18],maxZoom:18});
   setTimeout(()=>{if(FC_MAP){FC_MAP.invalidateSize();FC_MAP.fitBounds(poly.getBounds(),{padding:[18,18],maxZoom:18});}},200);
 }
@@ -1135,12 +1158,12 @@ function lotDraw(){
 }
 function lotAreaTxt(){document.getElementById("lotArea").textContent=LOT.pts.length>=3?T("lot_area",fmt1(lotHa(LOT.pts))):T("lot_need");}
 function lotStopWalk(){ if(LOT.watch!==null){navigator.geolocation.clearWatch(LOT.watch);LOT.watch=null;} const b=document.getElementById("lotWalk"); b.textContent=T("lot_walk"); b.classList.remove("rec"); lotDraw(); }
-function lotOpen(){
+function lotOpen(isNew){
   const m=document.getElementById("lotModal"); m.hidden=false;
-  let saved=null; try{saved=JSON.parse(lsGet("ss_lot")||"null")}catch(e){}
-  const pp=paddyPoint(STATE.site), cur=DATA.sites.find(x=>x.site_id===STATE.site);
-  const near=saved&&saved.pts&&saved.pts.length>=3&&cur&&L.latLng(saved.pts[0]).distanceTo([+cur.lat,+cur.lon])/1000<=ZONE_KM;
-  LOT.pts=near?saved.pts.slice():[];
+  const all=lotsGet(), act=isNew===true?null:lotActive(), pp=paddyPoint(STATE.site);
+  LOT.editId=act?act.id:null; LOT.pts=act?act.pts.slice():[];
+  const ttl=document.querySelector('#lotModal [data-i18n="lot_t"]');
+  if(ttl) ttl.textContent=act?T("lot_editing",lotName(act,all)):all.length?T("lot_new",all.length+1):T("lot_t");
   if(!LOT.map){
     LOT.map=L.map("lotMap",{zoomControl:true}).setView(paddyPoint(STATE.site)||[-1.878,-79.945],16);
     L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,maxNativeZoom:18,attribution:"Esri World Imagery"}).addTo(LOT.map);
@@ -1180,6 +1203,9 @@ function lotOpen(){
         LOT.haz.addTo(LOT.map); b.textContent=T("lot_haz_off"); lg.textContent=T("lot_haz_leg"); lg.hidden=false;
       }).catch(()=>{b.textContent=T("lot_haz");}); };
   } else if(!LOT.pts.length){ LOT.map.setView(pp||LOT.map.getCenter(),16); }
+  if(LOT.others) LOT.map.removeLayer(LOT.others);
+  LOT.others=L.layerGroup(all.filter(x=>x.id!==LOT.editId).map(x=>L.polygon(x.pts,{color:"#fff",weight:2,dashArray:"5 5",fillOpacity:.1,interactive:false}).bindTooltip(lotName(x,all),{permanent:true,direction:"center",className:"zonelbl"}))).addTo(LOT.map);
+  if(!act&&all.length&&pp){ const last=all[all.length-1]; if(L.latLng(last.pts[0]).distanceTo(pp)<ZONE_KM*1000) setTimeout(()=>LOT.map.fitBounds(last.pts,{padding:[80,80],maxZoom:16}),160); }
   setTimeout(()=>{LOT.map.invalidateSize(); if(LOT.pts.length>=3) LOT.map.fitBounds(LOT.pts,{padding:[30,30]}); lotDateShow(); lotZoneShow();},150);
   lotDraw();
 }
@@ -1195,19 +1221,21 @@ async function lotSave(){
     const all=[c,...ring], r=await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${all.map(x=>x[0].toFixed(5)).join(",")}&longitude=${all.map(x=>x[1].toFixed(5)).join(",")}`);
     const e=(await r.json()).elevation; rel=e[0]-median(e.slice(1));
   }catch(err){}
-  lsSet("ss_lot",JSON.stringify({pts:LOT.pts,ha,rel,t:Date.now()}));
-  lsSet("ss_ha",String(ha)); const hi=document.getElementById("haIn"); if(hi) hi.value=ha;
+  const all=lotsGet(); let x=all.find(y=>y.id===LOT.editId);
+  if(x) Object.assign(x,{pts:LOT.pts.slice(),ha,rel,t:Date.now()}); else {x={id:Date.now(),name:null,pts:LOT.pts.slice(),ha,rel,t:Date.now()}; all.push(x);}
+  lotsSet(all); lsSet("ss_lot_act",String(x.id)); FC_KEY="";
+  const hi=document.getElementById("haIn"); if(hi) hi.value=lsGet("ss_ha")||"";
   lotClose(); lotShowPro();
   const ns=nearestSite(c[0],c[1]);
   if(ns&&ns.d<=ZONE_KM&&ns.s.site_id!==STATE.site) selectSite(ns.s.site_id); else renderSimple();
 }
 function lotShowPro(){
-  if(typeof map==="undefined"||!map) return; let sv=null; try{sv=JSON.parse(lsGet("ss_lot")||"null")}catch(e){}
+  if(typeof map==="undefined"||!map) return; const all=lotsGet();
   if(LOT.proPoly){map.removeLayer(LOT.proPoly);LOT.proPoly=null;}
-  if(sv&&sv.pts&&sv.pts.length>=3) LOT.proPoly=L.polygon(sv.pts,{color:"#FFD23F",weight:3,fillOpacity:.15}).addTo(map);
+  if(all.length) LOT.proPoly=L.layerGroup(all.map(x=>L.polygon(x.pts,{color:"#FFD23F",weight:3,fillOpacity:.15}))).addTo(map);
 }
 function lotLine(){
-  let sv=null; try{sv=JSON.parse(lsGet("ss_lot")||"null")}catch(e){} if(!sv||!sv.pts) return "";
+  const sv=lotActive(); if(!sv||!sv.pts) return "";
   const cur=DATA.sites.find(x=>x.site_id===STATE.site); if(cur&&L.latLng(sv.pts[0]).distanceTo([+cur.lat,+cur.lon])/1000>ZONE_KM) return "";
   const r=sv.rel, k=r==null?"":r<=-1?T("lot_low",fmt1(-r)):r>=1?T("lot_high",fmt1(r)):T("lot_same");
   return `<div class="keyfact">${T("lot_res",fmt1(sv.ha),k)}${r==null?"":`<div class="small" style="margin-top:4px">${T("lot_cav")}</div>`}</div>`;
