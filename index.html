@@ -328,6 +328,7 @@ footer h5{font-family:var(--sans);letter-spacing:0;text-transform:none;font-size
 #pro .prohead{color:var(--muted);font:800 26px var(--display);letter-spacing:.01em;text-transform:uppercase}
 #pro .panel{background:var(--panel);border-color:var(--line)}
 #pro .ins p{color:#c7d6cb}
+#pro .c-violet{color:#B9A8F2}
 #pro .lyr.on{color:#0E1A14}
 #pro .ph .n{background:var(--cyan);color:#0E1A14}
 @media (max-width:1000px){.heroband{height:220px}.hero{margin-top:-80px}.hero h1{padding:14px 16px}.light{flex-direction:column}.gauge{width:100%;height:46px;flex:none}.gauge .water{top:0;bottom:0;height:auto;width:var(--lvl)}.gauge .staff{display:none}.bigmonth{width:100%}}
@@ -380,7 +381,7 @@ footer h5{font-family:var(--sans);letter-spacing:0;text-transform:none;font-size
   </div>
 
   <div id="pro" hidden>
-  <div class="prohead" data-i18n="s_prohead">Full analysis — for technicians and judges</div>
+  <div class="prohead" data-i18n="s_prohead">Full analysis</div>
     <section class="panel">
       <div class="ph"><span class="n">★</span><h2 data-i18n="s_ins">What NASA data revealed</h2><span class="tag">NASA POWER · 1981–2025</span></div>
       <div class="pb">
@@ -601,9 +602,9 @@ Object.assign(I18N.en,{hero_cap:z=>`Rice paddies near ${z}, seen from space`,led
  s_m1:"🚫 <b>Low plot:</b> do not sow rice from November to April.",s_m2:l=>`🫘 <b>High plot:</b> rice in the wet season, soybean in the dry season (saves ~${l} million litres/ha).`,s_m3:"🧹 <b>Clean your drains</b> before December.",s_m4:"📅 <b>Dry-season crop:</b> wait until June.",
  s_n1:"🌾 <b>You can sow rice</b> in the wet season.",s_n2:l=>`🫘 <b>Dry season:</b> soybean instead of rice (saves ~${l} million litres/ha).`,s_n3:"🧹 <b>Keep your drains clean.</b>",
  s_why:(nd,n0)=>`<b>Why?</b> In Nov–Dec 1997 it rained <b>${nd} mm</b> here. A normal year: ${n0} mm. (NASA POWER)`,s_mc2:p=>`${p}% chance of a very wet season (1,000 simulations, 45 years of NASA data).`,
- s_q1:"Where is your farm?",s_q2:"What do you need?",s_q3:"What to do",s_q3tag:"Options to confirm with a local technician",s_ins:"What NASA data revealed",s_prohead:"Full analysis — for technicians and judges",
+ s_q1:"Where is your farm?",s_q2:"What do you need?",s_q3:"What to do",s_q3tag:"Options to confirm with a local technician",s_ins:"What NASA data revealed",s_prohead:"Full analysis",
  s_plan:"🌱 I'm going to sow",s_plan_s:"Plan the next season",s_flood:"🌊 My field flooded",s_flood_s:"What can I still sow?",
- s_nino:"⚠️ <b>Strong El Niño</b> (like 1997–98): ON",s_nonino:"<b>Normal year</b> · tap to simulate a strong El Niño",
+ s_nino:"⚠️ <b>Strong El Niño: ON</b>, because of Ecuador's official ERFEN warning (Nov 2026). Tap to see a normal year.",s_nonino:"<b>Normal year</b> (no El Niño). Tap to go back to the official ERFEN warning.",
  s_risk:{red:"HIGH",amber:"MEDIUM",green:"LOW"},
  s_title:(z,l)=>`Wet-season rice (Jan–Apr) in ${z}: ${l} flood risk`,
  s_mc:(p)=>`In 1,000 simulated wet seasons built from 45 years of NASA rain data, <b>${p}%</b> were very wet (1.5× normal or more).`,
@@ -632,9 +633,9 @@ Object.assign(I18N.es,{hero_cap:z=>`Arrozales cerca de ${z}, vistos desde el esp
  s_m1:"🚫 <b>Lote bajo:</b> no siembres arroz de noviembre a abril.",s_m2:l=>`🫘 <b>Lote alto:</b> arroz en invierno y soya en verano (ahorras ~${l} millones de litros/ha).`,s_m3:"🧹 <b>Limpia tus drenajes</b> antes de diciembre.",s_m4:"📅 <b>Cultivo de verano:</b> espera a junio.",
  s_n1:"🌾 <b>Puedes sembrar arroz</b> en invierno.",s_n2:l=>`🫘 <b>En verano:</b> soya en vez de arroz (ahorras ~${l} millones de litros/ha).`,s_n3:"🧹 <b>Mantén limpios tus drenajes.</b>",
  s_why:(nd,n0)=>`<b>¿Por qué?</b> En nov–dic de 1997 llovieron <b>${nd} mm</b> aquí. Un año normal: ${n0} mm. (NASA POWER)`,s_mc2:p=>`${p}% de probabilidad de un invierno muy lluvioso (1.000 simulaciones, 45 años de datos NASA).`,
- s_q1:"¿Dónde está tu finca?",s_q2:"¿Qué necesitas?",s_q3:"Qué hacer",s_q3tag:"Opciones para confirmar con un técnico local",s_ins:"Lo que descubrimos con datos de la NASA",s_prohead:"Análisis completo — para técnicos y jueces",
+ s_q1:"¿Dónde está tu finca?",s_q2:"¿Qué necesitas?",s_q3:"Qué hacer",s_q3tag:"Opciones para confirmar con un técnico local",s_ins:"Lo que descubrimos con datos de la NASA",s_prohead:"Análisis completo",
  s_plan:"🌱 Voy a sembrar",s_plan_s:"Planear la próxima temporada",s_flood:"🌊 Se me inundó",s_flood_s:"¿Qué puedo sembrar todavía?",
- s_nino:"⚠️ <b>El Niño fuerte</b> (como 1997–98): ACTIVADO",s_nonino:"<b>Año normal</b> · toca para simular un El Niño fuerte",
+ s_nino:"⚠️ <b>El Niño fuerte: ACTIVADO</b> por el aviso oficial del ERFEN (nov 2026). Toca para ver un año normal.",s_nonino:"<b>Año normal</b> (sin El Niño). Toca para volver al aviso oficial del ERFEN.",
  s_risk:{red:"ALTO",amber:"MEDIO",green:"BAJO"},
  s_title:(z,l)=>`Arroz de invierno (ene–abr) en ${z}: riesgo ${l} de inundación`,
  s_mc:(p)=>`En 1.000 inviernos simulados con 45 años de lluvia de la NASA, <b>${p}%</b> fueron muy lluviosos (1,5 veces lo normal o más).`,
@@ -1113,7 +1114,7 @@ function applyLang(){
     STATE.mult=wet?STATE.multWet:1; renderAll();});
   document.getElementById("mult").oninput=e=>{STATE.multWet=+e.target.value;STATE.mult=STATE.multWet;document.getElementById("multVal").textContent=STATE.multWet;renderAll();};
   document.getElementById("copyBtn").onclick=async()=>{try{await navigator.clipboard.writeText(summaryText());toast(T("copied"));}catch(e){prompt("",summaryText());}};
-  const qLang=new URLSearchParams(location.search).get("lang"); if(qLang==="es"){LANG="es";applyLang();}
+  const qLang=new URLSearchParams(location.search).get("lang")||((navigator.language||"").toLowerCase().startsWith("es")?"es":"en"); if(qLang==="es"){LANG="es";applyLang();}
 })();
 </script>
 </body>
