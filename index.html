@@ -349,6 +349,19 @@ footer h5{font-family:var(--sans);letter-spacing:0;text-transform:none;font-size
 .fcbox{margin-top:12px;padding:12px 14px;border-radius:12px;background:#E8F2F8;border:1.5px solid #B9D4E6;font-size:16px}
 #pro .fcbox{background:rgba(120,180,220,.12);border-color:rgba(120,180,220,.4)}
 .scinote{margin-top:12px;font-size:14px}
+.lotbtn{margin-top:10px;padding:12px 16px;font:700 16px var(--sans);border-radius:12px;border:2px solid #2F6B3A;background:#fff;color:#1E4A27;cursor:pointer}
+.lotmodal{position:fixed;inset:0;z-index:5000;background:rgba(10,20,14,.72);display:flex;align-items:center;justify-content:center;padding:10px}
+.lotmodal[hidden]{display:none}
+.lotcard{background:#F4F8F2;color:#14261A;border-radius:16px;width:min(760px,100%);max-height:96vh;overflow:auto;padding:14px}
+.lothead{display:flex;justify-content:space-between;align-items:center;font-size:20px}
+.lotx{border:0;background:none;font-size:22px;cursor:pointer;padding:6px}
+.lothelp{margin:6px 0 10px;font-size:16px}
+#lotMap{height:min(58vh,460px);border-radius:12px}
+.lotarea{margin:10px 0;font-size:20px;font-weight:700}
+.lotbtns{display:flex;flex-wrap:wrap;gap:8px}
+.lotbtns button{flex:1 1 140px;padding:12px;font:700 15px var(--sans);border-radius:10px;border:1.5px solid #9DB89A;background:#fff;cursor:pointer}
+.lotbtns button.ok{background:#2F6B3A;color:#fff;border-color:#2F6B3A}
+.lotbtns button.rec{background:#B3261E;color:#fff;border-color:#B3261E}
 .scinote summary{cursor:pointer;font-weight:700}
 .scinote div{margin-top:8px;line-height:1.5}
 </style></head>
@@ -383,7 +396,8 @@ footer h5{font-family:var(--sans);letter-spacing:0;text-transform:none;font-size
     <section class="panel step">
       <div class="ph"><span class="n">1</span><h2 data-i18n="s_q1">Where is your farm?</h2></div>
       <div class="pb"><div class="bigbtns" id="sZones"></div>
-        <div class="farmrow"><label for="haIn">🏡 <span data-i18n="farm_q">How many hectares do you sow? (optional)</span></label><input id="haIn" type="number" min="0" max="9999" inputmode="numeric" placeholder="ha"></div></div>
+        <div class="farmrow"><label for="haIn">🏡 <span data-i18n="farm_q">How many hectares do you sow? (optional)</span></label><input id="haIn" type="number" min="0" max="9999" inputmode="numeric" placeholder="ha"></div>
+        <button class="lotbtn" id="lotBtn" type="button" data-i18n="lot_btn">🗺️ Mark my plot on the map</button></div>
     </section>
     <section class="panel step">
       <div class="ph"><span class="n">2</span><h2 data-i18n="s_q2">What do you need?</h2></div>
@@ -399,6 +413,21 @@ footer h5{font-family:var(--sans);letter-spacing:0;text-transform:none;font-size
     <div class="morebtns"><button class="protoggle" id="learnBtn" data-i18n="s_learn_btn">📚 Learn in 2 minutes</button><button class="protoggle" id="proBtn"></button></div>
   </div>
 
+  <div class="lotmodal" id="lotModal" hidden>
+    <div class="lotcard">
+      <div class="lothead"><b data-i18n="lot_t">Mark your plot</b><button type="button" class="lotx" id="lotClose" aria-label="Close">✖</button></div>
+      <p class="lothelp" data-i18n="lot_help">Tap the corners of your plot on the satellite photo. Or walk around its edge with your phone.</p>
+      <div id="lotMap"></div>
+      <div class="lotarea" id="lotArea"></div>
+      <div class="lotbtns">
+        <button type="button" id="lotMe" data-i18n="lot_me">📍 Go to where I am</button>
+        <button type="button" id="lotWalk" data-i18n="lot_walk">🚶 Walk the edge (GPS)</button>
+        <button type="button" id="lotUndo" data-i18n="lot_undo">↩️ Undo</button>
+        <button type="button" id="lotClear" data-i18n="lot_clear">🗑️ Start over</button>
+        <button type="button" class="ok" id="lotOk" data-i18n="lot_ok">✅ Done</button>
+      </div>
+    </div>
+  </div>
   <div id="pro" hidden>
   <div class="prohead" data-i18n="s_prohead">Full analysis</div>
     <section class="panel">
@@ -701,12 +730,28 @@ Object.assign(I18N.en,{farm_q:"How many hectares do you sow? (optional)",
  farm_line:(ha,l)=>`🏡 On your <b>${ha} ha</b>: switching the dry season to soybean saves ≈ <b>${l} million litres</b> of irrigation water a year.`,
  fc_t:"⏱️ Next 12 hours here:",fc_heavy:mm=>`~<b>${mm} mm</b> of rain expected — heavy. Don't spray or fertilize today; check your drains.`,fc_rain:mm=>`~<b>${mm} mm</b> of rain expected.`,fc_dry:"no rain expected.",
  fc_src:"12-hour forecast from NOAA GFS and ECMWF models, via",
+ lot_btn:"🗺️ Mark my plot on the map",lot_t:"Mark your plot",lot_help:"Tap the corners of your plot on the satellite photo. Or walk around its edge with your phone.",
+ lot_me:"📍 Go to where I am",lot_walk:"🚶 Walk the edge (GPS)",lot_stop:"⏹️ Stop walking",lot_undo:"↩️ Undo",lot_clear:"🗑️ Start over",lot_ok:"✅ Done",
+ lot_area:ha=>`Area: ${ha} ha`,lot_need:"Mark at least 3 corners.",lot_nogps:"Location not available. Allow location, or tap the corners.",
+ lot_res:(ha,k)=>`🗺️ Your plot: <b>${ha} ha</b>. ${k}`,
+ lot_low:d=>`It sits <b>lower</b> than its surroundings (≈${d} m): treat it as a <b>low plot</b>.`,
+ lot_high:d=>`It sits <b>higher</b> than its surroundings (≈${d} m): treat it as a <b>high plot</b>.`,
+ lot_same:"It is about as high as its surroundings: check in the field whether water pools.",
+ lot_cav:"Approximate height from satellite (Copernicus DEM, 90 m, via Open-Meteo). Confirm in the field.",
  sci:"📖 What our advice is based on",
  sci_body:"Crop water needs: <a href='https://www.fao.org/4/x0490e/x0490e00.htm' target='_blank' rel='noopener'>FAO-56</a>. Rice→soybean rotation: INIAP soybean guide. Rice that survives under water (SUB1 gene): Bailey-Serres &amp; Voesenek (2010). Rain 1981–2025: <a href='https://power.larc.nasa.gov/' target='_blank' rel='noopener'>NASA POWER</a>. El Niño warning: ERFEN (Nov 2026). Always confirm with a local technician."});
 Object.assign(I18N.es,{farm_q:"¿Cuántas hectáreas siembras? (opcional)",
  farm_line:(ha,l)=>`🏡 En tus <b>${ha} ha</b>: cambiar el verano a soya ahorra ≈ <b>${l} millones de litros</b> de riego al año.`,
  fc_t:"⏱️ Próximas 12 horas aquí:",fc_heavy:mm=>`se esperan ~<b>${mm} mm</b> de lluvia — fuerte. Hoy no fumigues ni abones; revisa tus drenajes.`,fc_rain:mm=>`se esperan ~<b>${mm} mm</b> de lluvia.`,fc_dry:"no se espera lluvia.",
  fc_src:"Pronóstico de 12 horas de los modelos NOAA GFS y ECMWF, vía",
+ lot_btn:"🗺️ Marcar mi lote en el mapa",lot_t:"Marca tu lote",lot_help:"Toca las esquinas de tu lote sobre la foto satelital. O camina por el borde con tu celular.",
+ lot_me:"📍 Ir a donde estoy",lot_walk:"🚶 Caminar el borde (GPS)",lot_stop:"⏹️ Terminar caminata",lot_undo:"↩️ Deshacer",lot_clear:"🗑️ Empezar de nuevo",lot_ok:"✅ Listo",
+ lot_area:ha=>`Área: ${ha} ha`,lot_need:"Marca al menos 3 esquinas.",lot_nogps:"No se pudo ver tu ubicación. Permite la ubicación o toca las esquinas.",
+ lot_res:(ha,k)=>`🗺️ Tu lote: <b>${ha} ha</b>. ${k}`,
+ lot_low:d=>`Está <b>más bajo</b> que su alrededor (≈${d} m): trátalo como <b>lote bajo</b>.`,
+ lot_high:d=>`Está <b>más alto</b> que su alrededor (≈${d} m): trátalo como <b>lote alto</b>.`,
+ lot_same:"Está a la misma altura que su alrededor: revisa en el campo si se encharca.",
+ lot_cav:"Altura aproximada de satélite (Copernicus DEM, 90 m, vía Open-Meteo). Confírmalo en el campo.",
  sci:"📖 ¿En qué nos basamos?",
  sci_body:"Agua que pide cada cultivo: <a href='https://www.fao.org/4/x0490e/x0490e00.htm' target='_blank' rel='noopener'>FAO-56</a>. Rotación arroz→soya: guía de soya del INIAP. Arroz que sobrevive bajo el agua (gen SUB1): Bailey-Serres y Voesenek (2010). Lluvia 1981–2025: <a href='https://power.larc.nasa.gov/' target='_blank' rel='noopener'>NASA POWER</a>. Aviso de El Niño: ERFEN (nov 2026). Confirma siempre con un técnico local."});
 let LANG = "en";
@@ -947,8 +992,76 @@ async function loadForecast(site){
     const mm=(d.hourly.precipitation||[]).reduce((a,b)=>a+(b||0),0);
     const el=document.getElementById("fcBox"); if(!el) return;
     el.hidden=false;
-    el.innerHTML=`<b>${T("fc_t")}</b> ${mm>=10?T("fc_heavy",fmt(mm)):mm>=1?T("fc_rain",fmt1(mm)):T("fc_dry")} <span class="src">${T("fc_src")} <a href="https://open-meteo.com/docs" target="_blank" rel="noopener">Open-Meteo</a></span>`;
+    el.innerHTML=`<b>${T("fc_t")}</b> ${mm>=10?T("fc_heavy",fmt(mm)):mm>=1?T("fc_rain",fmt1(mm)):T("fc_dry")} <span class="src">${T("fc_src")} <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">Open-Meteo</a></span>`;
   }catch(e){}
+}
+const LOT={pts:[],map:null,poly:null,marks:null,watch:null,proPoly:null};
+function lotHa(pts){ // geodesic polygon area, m2 -> ha
+  if(pts.length<3) return 0; const R=6378137,rad=Math.PI/180; let a=0;
+  for(let i=0;i<pts.length;i++){const p1=pts[i],p2=pts[(i+1)%pts.length]; a+=(p2[1]-p1[1])*rad*(2+Math.sin(p1[0]*rad)+Math.sin(p2[0]*rad));}
+  return Math.abs(a*R*R/2)/10000;
+}
+function lotDraw(){
+  if(!LOT.map) return;
+  if(LOT.poly) LOT.map.removeLayer(LOT.poly); LOT.marks.clearLayers();
+  LOT.pts.forEach(p=>L.circleMarker(p,{radius:6,color:"#fff",weight:2,fillColor:"#E0A400",fillOpacity:1}).addTo(LOT.marks));
+  LOT.poly=LOT.pts.length>=2?L.polygon(LOT.pts,{color:"#FFD23F",weight:3,fillOpacity:.25}).addTo(LOT.map):null;
+  const ha=lotHa(LOT.pts);
+  document.getElementById("lotArea").textContent=LOT.pts.length>=3?T("lot_area",fmt1(ha)):T("lot_need");
+}
+function lotStopWalk(){ if(LOT.watch!==null){navigator.geolocation.clearWatch(LOT.watch);LOT.watch=null;} const b=document.getElementById("lotWalk"); b.textContent=T("lot_walk"); b.classList.remove("rec"); }
+function lotOpen(){
+  const m=document.getElementById("lotModal"); m.hidden=false;
+  let saved=null; try{saved=JSON.parse(lsGet("ss_lot")||"null")}catch(e){}
+  LOT.pts=saved&&saved.pts?saved.pts:[];
+  if(!LOT.map){
+    LOT.map=L.map("lotMap",{zoomControl:true}).setView(paddyPoint(STATE.site)||[-1.878,-79.945],16);
+    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,maxNativeZoom:18,attribution:"Esri World Imagery"}).addTo(LOT.map);
+    LOT.marks=L.layerGroup().addTo(LOT.map);
+    LOT.map.on("click",e=>{if(LOT.watch!==null) return; LOT.pts.push([e.latlng.lat,e.latlng.lng]); lotDraw();});
+    document.getElementById("lotClose").onclick=lotClose;
+    document.getElementById("lotUndo").onclick=()=>{LOT.pts.pop();lotDraw();};
+    document.getElementById("lotClear").onclick=()=>{LOT.pts=[];lotDraw();};
+    document.getElementById("lotMe").onclick=()=>{ if(!navigator.geolocation){alert(T("lot_nogps"));return;}
+      navigator.geolocation.getCurrentPosition(p=>LOT.map.setView([p.coords.latitude,p.coords.longitude],17),()=>alert(T("lot_nogps")),{enableHighAccuracy:true,timeout:15000}); };
+    document.getElementById("lotWalk").onclick=()=>{ const b=document.getElementById("lotWalk");
+      if(LOT.watch!==null){lotStopWalk();return;}
+      if(!navigator.geolocation){alert(T("lot_nogps"));return;}
+      LOT.pts=[]; lotDraw(); b.textContent=T("lot_stop"); b.classList.add("rec");
+      LOT.watch=navigator.geolocation.watchPosition(p=>{
+        if(p.coords.accuracy>30) return; const q=[p.coords.latitude,p.coords.longitude], last=LOT.pts[LOT.pts.length-1];
+        if(last&&LOT.map.distance(last,q)<4) return; LOT.pts.push(q); LOT.map.setView(q,Math.max(LOT.map.getZoom(),17)); lotDraw();
+      },()=>{lotStopWalk();alert(T("lot_nogps"));},{enableHighAccuracy:true,maximumAge:0,timeout:20000}); };
+    document.getElementById("lotOk").onclick=lotSave;
+  } else if(!LOT.pts.length){ LOT.map.setView(paddyPoint(STATE.site)||LOT.map.getCenter(),16); }
+  setTimeout(()=>{LOT.map.invalidateSize(); if(LOT.pts.length>=3) LOT.map.fitBounds(LOT.pts,{padding:[30,30]});},150);
+  lotDraw();
+}
+function lotClose(){ lotStopWalk(); document.getElementById("lotModal").hidden=true; }
+async function lotSave(){
+  if(LOT.pts.length<3){document.getElementById("lotArea").textContent=T("lot_need");return;}
+  lotStopWalk();
+  const ha=Math.round(lotHa(LOT.pts)*10)/10, n=LOT.pts.length;
+  const c=[LOT.pts.reduce((a,p)=>a+p[0],0)/n, LOT.pts.reduce((a,p)=>a+p[1],0)/n];
+  let rel=null;
+  try{ // centre vs. a 1.5 km ring of 8 points
+    const ring=[...Array(8)].map((_,i)=>{const t=i*Math.PI/4,d=1500/111320;return [c[0]+d*Math.sin(t),c[1]+d*Math.cos(t)/Math.cos(c[0]*Math.PI/180)];});
+    const all=[c,...ring], r=await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${all.map(x=>x[0].toFixed(5)).join(",")}&longitude=${all.map(x=>x[1].toFixed(5)).join(",")}`);
+    const e=(await r.json()).elevation; rel=e[0]-median(e.slice(1));
+  }catch(err){}
+  lsSet("ss_lot",JSON.stringify({pts:LOT.pts,ha,rel}));
+  lsSet("ss_ha",String(ha)); const hi=document.getElementById("haIn"); if(hi) hi.value=ha;
+  lotClose(); lotShowPro(); renderSimple();
+}
+function lotShowPro(){
+  if(typeof map==="undefined"||!map) return; let sv=null; try{sv=JSON.parse(lsGet("ss_lot")||"null")}catch(e){}
+  if(LOT.proPoly){map.removeLayer(LOT.proPoly);LOT.proPoly=null;}
+  if(sv&&sv.pts&&sv.pts.length>=3) LOT.proPoly=L.polygon(sv.pts,{color:"#FFD23F",weight:3,fillOpacity:.15}).addTo(map);
+}
+function lotLine(){
+  let sv=null; try{sv=JSON.parse(lsGet("ss_lot")||"null")}catch(e){} if(!sv||!sv.pts) return "";
+  const r=sv.rel, k=r==null?"":r<=-1?T("lot_low",fmt1(-r)):r>=1?T("lot_high",fmt1(r)):T("lot_same");
+  return `<div class="keyfact">${T("lot_res",fmt1(sv.ha),k)}${r==null?"":`<div class="small" style="margin-top:4px">${T("lot_cav")}</div>`}</div>`;
 }
 function drops(mm){return mm<300?"💧":mm<600?"💧💧":"💧💧💧";}
 function renderSimple(){
@@ -987,7 +1100,7 @@ function renderSimple(){
   }
   const ha=+(lsGet("ss_ha")||0);
   const farm=(SS.need==="plan"&&ha>0)?`<div class="keyfact">${T("farm_line",ha,fmt1(ha*(res[0].irr-res[1].irr)/100))}</div>`:"";
-  box.insertAdjacentHTML("beforeend",`${farm}<div class="fcbox" id="fcBox" hidden></div><details class="scinote"><summary>${T("sci")}</summary><div class="small">${T("sci_body")}</div></details>`);
+  box.insertAdjacentHTML("beforeend",`${lotLine()}${farm}<div class="fcbox" id="fcBox" hidden></div><details class="scinote"><summary>${T("sci")}</summary><div class="small">${T("sci_body")}</div></details>`);
   loadForecast(site);
   document.getElementById("insights").innerHTML=[
     [fmt(yr(h,"nd",1997))+" mm","c-red",T("s_i1",fmt(yr(h,"nd",1997)),fmt(ndMed)+" mm"),"NASA POWER (PRECTOTCORR, monthly)","https://power.larc.nasa.gov/"],
@@ -1166,6 +1279,7 @@ function applyLang(){
   document.getElementById("chipNdvi").classList.add(ndvi?"ok":"warn");
   if(!DATA.sites.length){document.querySelector(".hero").insertAdjacentHTML("beforeend",'<div class="alert">Data could not be loaded.</div>');return;}
   STATE.site=DATA.sites[0].site_id;
+  document.getElementById("lotBtn").onclick=lotOpen; setTimeout(lotShowPro,600);
   const hi=document.getElementById("haIn"); if(hi){hi.value=lsGet("ss_ha")||""; hi.onchange=()=>{lsSet("ss_ha",hi.value); renderSimple();};}
   initMap(); renderZones(); document.getElementById("proBtn").onclick=togglePro;
   const showLearn=e=>{if(e)e.preventDefault();const l=document.getElementById("learn");l.hidden=false;l.scrollIntoView({behavior:"smooth",block:"start"});};
