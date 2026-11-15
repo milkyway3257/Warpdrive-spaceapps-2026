@@ -329,6 +329,15 @@ footer h5{font-family:var(--sans);letter-spacing:0;text-transform:none;font-size
 #pro .panel{background:var(--panel);border-color:var(--line)}
 #pro .ins p{color:#c7d6cb}
 #pro .c-violet{color:#B9A8F2}
+#pro{--ink:#E8F0E6}
+#pro .flag{color:#E8F0E6}
+.kpi .k{text-transform:none;letter-spacing:0;font:700 14px var(--sans)}
+.kpi .s{font-family:var(--sans)}
+#pro .badge{font-family:var(--sans);font-size:12px}
+#pro .strat h3{font-size:17px}
+#pro .meter{grid-template-columns:170px 1fr 70px;font-size:13px}
+#pro .small,#pro .callout{font-size:14px}
+#pro .ph .tag{display:none}
 #pro .lyr.on{color:#0E1A14}
 #pro .ph .n{background:var(--cyan);color:#0E1A14}
 @media (max-width:1000px){.heroband{height:220px}.hero{margin-top:-80px}.hero h1{padding:14px 16px}.light{flex-direction:column}.gauge{width:100%;height:46px;flex:none}.gauge .water{top:0;bottom:0;height:auto;width:var(--lvl)}.gauge .staff{display:none}.bigmonth{width:100%}}
@@ -660,6 +669,24 @@ Object.assign(I18N.es,{pattern_note:"SafeSow está hecho para arroceros: parte d
  s_mct:"Simulación Monte Carlo",s_mcs:"1.000 inviernos re-muestreados de 45 años (1981–2025) de lluvia NASA POWER, con variación aleatoria. Probabilidad de que la lluvia de ene–abr sea 1,5 veces lo normal o más:",
  s_mcl:"No todo El Niño fuerte inunda la Costa: solo 3 de los 7 eventos fuertes desde 1982 trajeron un invierno muy lluvioso aquí. El ERFEN advierte que este podría ser comparable a 1982–83 y 1997–98.",s_mcl_n:"Cualquier año",s_mcl_s:"Cualquier El Niño fuerte (7 eventos desde 1982, NOAA)",s_mcl_x:"El Niño extraordinario (como 1983 y 1998)",
  s_pro_show:"🔬 Análisis completo (mapa satelital, datos, fuentes)",s_pro_hide:"▲ Ocultar el análisis completo"});
+Object.assign(I18N.en,{soil_good:"🌱 Improves the soil",
+ m_irr:"Irrigation water (dry season)",m_exp:"Rain on the crop (risk)",
+ method:"How we calculate it: crop water need (FAO-56) minus rain, from NASA POWER data.",
+ clim_note:()=>"Bars: rain. Red line: water the field loses to sun and heat. Below the line you need irrigation. NASA POWER, 2001–2025 average for the zone (~50 km).",
+ cover_gap:"Cover-crop water use is missing (not counted as zero).",
+ rec_sum:(m,p,d)=>`Water went down in <b>${m}</b> → sow in <b>${p}</b>, once you can walk without sinking. ${d}`,
+ rec_wet:n=>`<b>${n}</b> rainy month(s) left: keep drains open.`,rec_dry:"Dry season ahead: you will need irrigation.",
+ cover_note:"Possible covers: Sesbania and Azolla (check local seed).",
+ ndvi_note:(l,d)=>`High green (0.6–0.9) = crop growing. Low (0.1–0.3) = bare or just harvested. Latest: <b>${l}</b> (${d}).`});
+Object.assign(I18N.es,{soil_good:"🌱 Mejora el suelo",
+ m_irr:"Agua de riego (verano)",m_exp:"Lluvia sobre el cultivo (riesgo)",
+ method:"Cómo lo calculamos: agua que pide el cultivo (FAO-56) menos la lluvia, con datos de NASA POWER.",
+ clim_note:()=>"Barras: lluvia. Línea roja: agua que el campo pierde por el sol y el calor. Si la barra queda debajo de la línea, hay que regar. NASA POWER, promedio 2001–2025 de la zona (~50 km).",
+ cover_gap:"Falta el dato de agua de la cobertura (no se cuenta como cero).",
+ rec_sum:(m,p,d)=>`El agua bajó en <b>${m}</b> → siembra en <b>${p}</b>, cuando puedas caminar sin hundirte. ${d}`,
+ rec_wet:n=>`Quedan <b>${n}</b> mes(es) de lluvia: mantén los drenajes abiertos.`,rec_dry:"Ya viene el verano: vas a necesitar riego.",
+ cover_note:"Coberturas posibles: Sesbania y Azolla (verifica si hay semilla en la zona).",
+ ndvi_note:(l,d)=>`Verde alto (0,6–0,9) = cultivo creciendo. Bajo (0,1–0,3) = tierra sin cultivo o recién cosechada. Último: <b>${l}</b> (${d}).`});
 let LANG = "en";
 const T = (k,...a)=>{const v=(I18N[LANG][k]??I18N.en[k]??k);return typeof v==="function"?v(...a):v};
 const M = i=>MONTHS[LANG][i-1];
@@ -1006,8 +1033,7 @@ function renderStrats(res){
     if(s.id==="S0") tags.push(`<span class="badge c">${T("baseline")}</span>`);
     if(r.irr===minIrr) tags.push(`<span class="badge g">▼ ${T("lowest_water")}</span>`);
     if(r.expMm===minExp) tags.push(`<span class="badge g">▼ ${T("lowest_risk")}</span>`);
-    tags.push(`<span class="badge">${T("legume")}: ${T(r.legume?"yes":"no")}</span>`);
-    tags.push(`<span class="badge ${s.breaks==="yes"?"g":s.breaks==="partly"?"a":""}">${T("breaks")}: ${T(s.breaks)}</span>`);
+    if(s.breaks==="yes") tags.push(`<span class="badge g">${T("soil_good")}</span>`);
     const cal = MONTHS[LANG].map(m=>`<div class="h">${m[0]}</div>`).join("") + Array.from({length:12},(_,i)=>{const c=r.cal[i+1];
       return `<div class="${WET.includes(i+1)?"wet":""}" style="background:${c?col[c.crop]:"var(--bare)"}" title="${M(i+1)}: ${c?T(c.crop):T("bare")}">${c?T(c.crop)[0]:""}</div>`}).join("");
     const meter=(lbl,v,max,unit,color)=>`<div class="meter"><span>${lbl}</span><div class="bar"><b style="width:${Math.max(3,v/max*100)}%;background:${color}"></b></div><span class="val">${v}${unit}</span></div>`;
@@ -1016,7 +1042,6 @@ function renderStrats(res){
       <div class="cal">${cal}</div>
       ${meter(T("m_irr"),r.irr,maxIrr," mm","var(--amber)")}
       ${meter(T("m_exp"),r.expMm,maxExp," mm","var(--red)")}
-      ${meter(T("m_bare"),r.bare,12,"","var(--dim)")}
       ${s.id==="S2"?`<div class="small">ⓘ ${T("cover_gap")}</div>`:""}
       <details><summary>${T("details")}</summary>
         <p><b>${T("why")}.</b> ${s.why[LANG]}</p><p><b>${T("evidence")}.</b> ${s.evidence[LANG]}</p>
@@ -1053,7 +1078,7 @@ function renderFlood(clim){
      <div class="top2"><h4>${T(o.c)} · <span class="small mono">${T("f_cycle",o.days)}</span></h4>
        <span class="mono small">${T("sow_in")} <b>${M(o.p)}</b> → ${T("harvest")} <b>${M(o.harvest)}</b> · ${T("water_need")} <b class="c-amber">${o.need} mm</b></span></div>
      <div class="tl">${Array.from({length:12},(_,i)=>{const m=i+1,on=o.months.includes(m);return `<div class="${WET.includes(m)?"w":""} ${on?"on":""}" style="${on?`background:${col[o.c]}`:""}">${M(m).slice(0,1)}</div>`}).join("")}</div>
-     <div class="flags">${o.flags.map(([i,t])=>`<div class="flag"><span>${i}</span><span>${t}</span></div>`).join("")}</div></div>`).join("")
+     <div class="flags">${o.flags.slice(0,2).map(([i,t])=>`<div class="flag"><span>${i}</span><span>${t}</span></div>`).join("")}</div></div>`).join("")
      + `<div class="small">ⓘ ${T("cover_note")}</div>`;
 }
 function renderNdvi(){
