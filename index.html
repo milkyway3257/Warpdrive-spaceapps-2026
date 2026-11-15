@@ -359,6 +359,22 @@ footer h5{font-family:var(--sans);letter-spacing:0;text-transform:none;font-size
 .lothelp{margin:6px 0 10px;font-size:16px}
 #lotMap{height:min(58vh,460px);border-radius:12px}
 .lotdate{margin-top:6px;font-size:14px}
+.farmcard{margin-top:14px;border-radius:18px;overflow:hidden;background:#13241A;color:#E8F0E6;box-shadow:0 6px 18px rgba(19,36,26,.25)}
+.farmcard[hidden]{display:none}
+.fc-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:12px 16px 0}
+.fc-head b{font:800 24px var(--display);text-transform:uppercase;letter-spacing:.02em}
+.fc-head span{font-size:13px;color:#A3B7A9}
+.fc-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:14px;padding:12px 16px}
+#fcMap{height:190px;border-radius:12px;border:2px solid #FFD23F;background:#24382C}
+.fc-big{font:800 64px/0.9 var(--display);color:#8DC63F}
+.fc-big small{font-size:24px;color:#E8F0E6;margin-left:4px}
+.fc-row{display:grid;grid-template-columns:24px 1fr;gap:6px;margin-top:8px;font-size:15px;line-height:1.35}
+.fc-row .mono{font-family:var(--mono);font-size:13px;color:#A3B7A9}
+.fc-btns{display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 12px}
+.fc-btns a,.fc-btns button{flex:1 1 140px;text-align:center;padding:11px;border-radius:10px;font:700 15px var(--sans);border:1.5px solid #3D5A47;background:#1C3326;color:#E8F0E6;cursor:pointer;text-decoration:none}
+.fc-btns button.warn{background:#C4301C;border-color:#C4301C}
+.fc-priv{padding:0 16px 14px;font-size:13px;color:#A3B7A9}
+@media(max-width:600px){.fc-body{grid-template-columns:1fr}.fc-big{font-size:56px}}
 .lotzone{margin-top:6px;padding:8px 12px;border-radius:10px;background:#E4EFE1;font-size:16px}
 .lotzone.out{background:#FCEBD0}
 .zonelbl{background:#14261A;color:#fff;border:0;font:700 13px var(--sans);padding:3px 8px;border-radius:8px;box-shadow:none}
@@ -410,7 +426,8 @@ footer h5{font-family:var(--sans);letter-spacing:0;text-transform:none;font-size
       <div class="ph"><span class="n">1</span><h2 data-i18n="s_q1">Where is your farm?</h2></div>
       <div class="pb"><div class="bigbtns" id="sZones"></div>
         <div class="farmrow"><label for="haIn">🏡 <span data-i18n="farm_q">How many hectares do you sow? (optional)</span></label><input id="haIn" type="number" min="0" max="9999" inputmode="numeric" placeholder="ha"></div>
-        <button class="lotbtn" id="lotBtn" type="button" data-i18n="lot_btn">🗺️ Mark my plot on the map</button></div>
+        <button class="lotbtn" id="lotBtn" type="button" data-i18n="lot_btn">🗺️ Mark my plot on the map</button>
+        <div class="farmcard" id="farmCard" hidden></div></div>
     </section>
     <section class="panel step">
       <div class="ph"><span class="n">2</span><h2 data-i18n="s_q2">What do you need?</h2></div>
@@ -759,6 +776,12 @@ Object.assign(I18N.en,{farm_q:"How many hectares do you sow? (optional)",
  zone_out:(z,km)=>`📍 Outside SafeSow's 4 zones. Nearest: <b>${z}</b> (${km} km away). Area and height still work.`,
  gps_wait:"📡 Looking for GPS signal… walk slowly.",gps_weak:a=>`📡 Weak GPS signal (± ${a} m). Go to an open area.`,
  me_wait:"📍 Finding where you are…",
+ fc_title:"My farm",fc_saved:d=>`Saved ${d}`,fc_out:"Outside SafeSow's 4 zones",
+ fc_low:m=>`<b>Low plot</b>: ≈${m} m lower than its surroundings`,fc_high:m=>`<b>High plot</b>: ≈${m} m higher than its surroundings`,
+ fc_same:"About as high as its surroundings",fc_nolvl:"Height pending: tap Edit → Done when you have internet",
+ fc_water:l=>`With soybean in the dry season you save ≈ <b>${l} million litres</b> a year`,
+ fc_gmaps:"🧭 Open in Google Maps",fc_edit:"✏️ Edit plot",fc_del:"🗑️ Delete",fc_del2:"⚠️ Sure? Tap again",
+ fc_priv:"🔒 Saved only on this phone. It is not sent to any server.",
  lot_btn:"🗺️ Mark my plot on the map",lot_t:"Mark your plot",lot_help:"Tap the corners of your plot on the satellite photo. Or walk around its edge with your phone.",
  lot_me:"📍 Go to where I am",lot_walk:"🚶 Walk the edge (GPS)",lot_stop:"⏹️ Stop walking",lot_undo:"↩️ Undo",lot_clear:"🗑️ Start over",lot_ok:"✅ Done",
  lot_area:ha=>`Area: ${ha} ha`,lot_need:"Mark at least 3 corners.",lot_nogps:"Location not available. Allow location, or tap the corners.",
@@ -785,6 +808,12 @@ Object.assign(I18N.es,{farm_q:"¿Cuántas hectáreas siembras? (opcional)",
  zone_out:(z,km)=>`📍 Fuera de las 4 zonas de SafeSow. Lo más cercano: <b>${z}</b> (a ${km} km). El área y la altura sí funcionan.`,
  gps_wait:"📡 Buscando señal GPS… camina despacio.",gps_weak:a=>`📡 Señal GPS débil (± ${a} m). Ve a un lugar abierto.`,
  me_wait:"📍 Buscando dónde estás…",
+ fc_title:"Mi finca",fc_saved:d=>`Guardado el ${d}`,fc_out:"Fuera de las 4 zonas de SafeSow",
+ fc_low:m=>`<b>Lote bajo</b>: ≈${m} m más bajo que su alrededor`,fc_high:m=>`<b>Lote alto</b>: ≈${m} m más alto que su alrededor`,
+ fc_same:"A la misma altura que su alrededor",fc_nolvl:"Altura pendiente: toca Editar → Listo cuando tengas internet",
+ fc_water:l=>`Con soya en verano ahorras ≈ <b>${l} millones de litros</b> al año`,
+ fc_gmaps:"🧭 Abrir en Google Maps",fc_edit:"✏️ Editar lote",fc_del:"🗑️ Borrar",fc_del2:"⚠️ ¿Seguro? Toca otra vez",
+ fc_priv:"🔒 Se guarda solo en este celular. No se envía a ningún servidor.",
  lot_btn:"🗺️ Marcar mi lote en el mapa",lot_t:"Marca tu lote",lot_help:"Toca las esquinas de tu lote sobre la foto satelital. O camina por el borde con tu celular.",
  lot_me:"📍 Ir a donde estoy",lot_walk:"🚶 Caminar el borde (GPS)",lot_stop:"⏹️ Terminar caminata",lot_undo:"↩️ Deshacer",lot_clear:"🗑️ Empezar de nuevo",lot_ok:"✅ Listo",
  lot_area:ha=>`Área: ${ha} ha`,lot_need:"Marca al menos 3 esquinas.",lot_nogps:"No se pudo ver tu ubicación. Permite la ubicación o toca las esquinas.",
@@ -1052,6 +1081,40 @@ function nearestSite(lat,lon){let best=null;DATA.sites.forEach(x=>{const d=L.lat
 function lotZoneShow(){const el=document.getElementById("lotZone"); if(!el||!LOT.map) return; const c=LOT.map.getCenter(), n=nearestSite(c.lat,c.lng); if(!n) return;
   const z=n.s.site_name; el.classList.toggle("out",n.d>ZONE_KM); el.innerHTML=n.d>ZONE_KM?T("zone_out",z,fmt(n.d)):T("zone_in",z);}
 function lotMsg(t){document.getElementById("lotArea").textContent=t;}
+let FC_KEY="", FC_MAP=null;
+function renderFarmCard(){
+  const el=document.getElementById("farmCard"), btn=document.getElementById("lotBtn"); if(!el) return;
+  let sv=null; try{sv=JSON.parse(lsGet("ss_lot")||"null")}catch(e){}
+  if(!sv||!sv.pts||sv.pts.length<3){el.hidden=true; el.innerHTML=""; btn.hidden=false; if(FC_MAP){FC_MAP.remove();FC_MAP=null;} FC_KEY=""; return;}
+  const key=JSON.stringify(sv)+LANG; if(key===FC_KEY&&!el.hidden) return; FC_KEY=key;
+  btn.hidden=true; el.hidden=false;
+  const n=sv.pts.length, c=[sv.pts.reduce((a,p)=>a+p[0],0)/n, sv.pts.reduce((a,p)=>a+p[1],0)/n], ns=nearestSite(c[0],c[1]);
+  const inZone=ns&&ns.d<=ZONE_KM, zone=inZone?ns.s.site_name:T("fc_out");
+  const clim=climFor(inZone?ns.s.site_id:STATE.site), r0=evaluate(STRATS[0],clim,1), r1=evaluate(STRATS[1],clim,1);
+  const r=sv.rel, lvl=r==null?T("fc_nolvl"):r<=-1?T("fc_low",fmt1(-r)):r>=1?T("fc_high",fmt1(r)):T("fc_same");
+  const when=sv.t?new Date(sv.t).toLocaleDateString(LANG==="es"?"es-EC":"en-US",{day:"numeric",month:"short",year:"numeric"}):"";
+  el.innerHTML=`<div class="fc-head"><b>🏡 ${T("fc_title")}</b><span>${when?T("fc_saved",when):""}</span></div>
+    <div class="fc-body"><div id="fcMap" role="img" aria-label="${T("fc_title")}"></div>
+      <div><div class="fc-big">${fmt1(sv.ha)}<small>ha</small></div>
+        <div class="fc-row"><span>📍</span><span>${zone}</span></div>
+        <div class="fc-row"><span>⛰️</span><span>${lvl}</span></div>
+        <div class="fc-row"><span>💧</span><span>${T("fc_water",fmt1(sv.ha*(r0.irr-r1.irr)/100))}</span></div>
+        <div class="fc-row"><span>🧭</span><span class="mono">${c[0].toFixed(5)}, ${c[1].toFixed(5)}</span></div></div></div>
+    <div class="fc-btns"><a href="https://www.google.com/maps?q=${c[0].toFixed(6)},${c[1].toFixed(6)}" target="_blank" rel="noopener">${T("fc_gmaps")}</a>
+      <button type="button" id="fcEdit">${T("fc_edit")}</button><button type="button" id="fcDel">${T("fc_del")}</button></div>
+    <div class="fc-priv">${T("fc_priv")}</div>`;
+  document.getElementById("fcEdit").onclick=lotOpen;
+  const del=document.getElementById("fcDel");
+  del.onclick=()=>{ if(!del.classList.contains("warn")){del.classList.add("warn");del.textContent=T("fc_del2");setTimeout(()=>{if(del.isConnected){del.classList.remove("warn");del.textContent=T("fc_del");}},4000);return;}
+    try{localStorage.removeItem("ss_lot");localStorage.removeItem("ss_ha");}catch(e){} const hi=document.getElementById("haIn"); if(hi) hi.value="";
+    lotShowPro(); renderSimple(); };
+  if(FC_MAP){FC_MAP.remove();FC_MAP=null;}
+  FC_MAP=L.map("fcMap",{zoomControl:false,dragging:false,scrollWheelZoom:false,doubleClickZoom:false,touchZoom:false,boxZoom:false,keyboard:false});
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,maxNativeZoom:18,attribution:"Esri"}).addTo(FC_MAP);
+  const poly=L.polygon(sv.pts,{color:"#FFD23F",weight:3,fillOpacity:.25}).addTo(FC_MAP);
+  FC_MAP.fitBounds(poly.getBounds(),{padding:[18,18],maxZoom:18});
+  setTimeout(()=>{if(FC_MAP){FC_MAP.invalidateSize();FC_MAP.fitBounds(poly.getBounds(),{padding:[18,18],maxZoom:18});}},200);
+}
 const LOT={pts:[],map:null,poly:null,marks:null,watch:null,proPoly:null};
 function lotHa(pts){ // geodesic polygon area, m2 -> ha
   if(pts.length<3) return 0; const R=6378137,rad=Math.PI/180; let a=0;
@@ -1127,7 +1190,7 @@ async function lotSave(){
     const all=[c,...ring], r=await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${all.map(x=>x[0].toFixed(5)).join(",")}&longitude=${all.map(x=>x[1].toFixed(5)).join(",")}`);
     const e=(await r.json()).elevation; rel=e[0]-median(e.slice(1));
   }catch(err){}
-  lsSet("ss_lot",JSON.stringify({pts:LOT.pts,ha,rel}));
+  lsSet("ss_lot",JSON.stringify({pts:LOT.pts,ha,rel,t:Date.now()}));
   lsSet("ss_ha",String(ha)); const hi=document.getElementById("haIn"); if(hi) hi.value=ha;
   lotClose(); lotShowPro();
   const ns=nearestSite(c[0],c[1]);
@@ -1150,6 +1213,7 @@ function renderSimple(){
   const site=DATA.sites.find(x=>x.site_id===STATE.site), zn=site.site_name.split(",")[0];
   document.getElementById("heroCap").textContent=T("hero_cap",zn);
   const hp=paddyPoint(STATE.site); if(hp) imgDate(hp[0],hp[1]).then(dt=>{if(dt&&STATE.site===site.site_id) document.getElementById("heroCap").textContent=T("hero_cap",zn)+" · "+T("photo")+" "+fmtD(dt);});
+  renderFarmCard();
   document.getElementById("sZones").innerHTML=DATA.sites.map(s=>`<button class="bigbtn ${s.site_id===STATE.site?"on":""}" data-s="${s.site_id}">📍 ${s.site_name.split(",")[0]}<small>${(s.site_name.split(",")[1]||"").trim()}</small></button>`).join("");
   document.querySelectorAll("#sZones .bigbtn").forEach(b=>b.onclick=()=>selectSite(b.dataset.s));
   document.getElementById("sNeed").innerHTML=[["plan","s_plan","s_plan_s"],["flood","s_flood","s_flood_s"]].map(([k,a,b])=>`<button class="bigbtn ${SS.need===k?"on":""}" data-k="${k}">${T(a)}<small>${T(b)}</small></button>`).join("");
