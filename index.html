@@ -216,6 +216,18 @@ footer h5{font:600 11px var(--mono);letter-spacing:.14em;color:var(--text);margi
 .protoggle:hover{background:rgba(34,211,238,.06)}
 #pro .prohead{font:600 11px var(--mono);letter-spacing:.16em;color:var(--muted);text-transform:uppercase;margin:6px 0 10px}
 @media (max-width:1000px){.bigbtns{grid-template-columns:1fr 1fr}.insights,.fcards{grid-template-columns:1fr}.mcbox{grid-template-columns:1fr}.optline{grid-template-columns:1.3fr 1fr 1fr 1fr;font-size:12.5px}.months6{grid-template-columns:repeat(3,1fr)}}
+.chips{display:none!important}
+.hero{padding:22px 0 6px}
+.hero .alert,.hero .eyebrow{display:none}
+.lede{font-size:15.5px}
+.simple .ph .tag{display:none}
+.todo li{font-size:16.5px;padding:12px 14px}
+.keyfact{margin-top:14px;font-size:14px;color:var(--muted);line-height:1.5}
+.keyfact b{color:var(--text)}
+.result details{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+.result .btn.wa{margin-top:14px}
+.morebtns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:1000px){.morebtns{grid-template-columns:1fr}.logo small{display:none}.top .wrap{gap:10px}.navlearn{padding:6px 10px;font-size:12px}}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--cyan);color:#001018;padding:10px 16px;border-radius:10px;font-weight:700;opacity:0;transition:.3s;pointer-events:none;z-index:2000}
 .toast.on{opacity:1}
 @media (max-width:1000px){
@@ -269,6 +281,11 @@ footer h5{font:600 11px var(--mono);letter-spacing:.14em;color:var(--text);margi
       <div class="ph"><span class="n">3</span><h2 data-i18n="s_q3">What to do</h2><span class="tag" data-i18n="s_q3tag">Options to confirm with a local technician</span></div>
       <div class="pb" id="sResult"></div>
     </section>
+    <div class="morebtns"><button class="protoggle" id="learnBtn" data-i18n="s_learn_btn">📚 Learn in 2 minutes</button><button class="protoggle" id="proBtn"></button></div>
+  </div>
+
+  <div id="pro" hidden>
+  <div class="prohead" data-i18n="s_prohead">Full analysis — for technicians and judges</div>
     <section class="panel">
       <div class="ph"><span class="n">★</span><h2 data-i18n="s_ins">What NASA data revealed</h2><span class="tag">NASA POWER · 1981–2025</span></div>
       <div class="pb">
@@ -276,11 +293,6 @@ footer h5{font:600 11px var(--mono);letter-spacing:.14em;color:var(--text);margi
         <div class="mcbox" id="mcbox"></div>
       </div>
     </section>
-    <button class="protoggle" id="proBtn"></button>
-  </div>
-
-  <div id="pro" hidden>
-  <div class="prohead" data-i18n="s_prohead">Full analysis — for technicians and judges</div>
   <div class="grid g-main">
     <div class="panel">
       <div class="ph"><span class="n">01</span><h2 data-i18n="p1">Your farm</h2></div>
@@ -357,7 +369,7 @@ footer h5{font:600 11px var(--mono);letter-spacing:.14em;color:var(--text);margi
 
   </div>
 
-  <section class="panel" id="learn">
+  <section class="panel" id="learn" hidden>
     <div class="ph"><span class="n">07</span><h2 data-i18n="p_learn">Learn in 2 minutes</h2><span class="tag" data-i18n="p_learn_tag">Tap 🔊 to listen</span></div>
     <div class="pb">
       <div class="learn" id="learnCards"></div>
@@ -366,7 +378,7 @@ footer h5{font:600 11px var(--mono);letter-spacing:.14em;color:var(--text);margi
     </div>
   </section>
 
-  <section class="panel">
+  <section class="panel" id="share" hidden>
     <div class="ph"><span class="n">08</span><h2 data-i18n="p7">Take the plan to your technician</h2></div>
     <div class="pb">
       <p class="small" style="margin-top:0" data-i18n="sharetxt">Nothing you choose here is stored. Send a short summary to your phone or to your agronomist.</p>
@@ -490,9 +502,13 @@ const I18N = {
   wa_head:"🌾 SafeSow · plan de arroz con datos de la NASA",wa_zone:"Zona",wa_scen:"Escenario",wa_norm:"clima normal",wa_wet:m=>`más lluvioso que lo normal (×${m}, escenario)`,
   wa_s:"Estrategias (riego en verano · lluvia sobre el cultivo ene–abr)",wa_flood:m=>`Si el agua bajó en ${m}:`,wa_foot:"Opciones para revisar con un técnico local, no son instrucciones."}
 };
-Object.assign(I18N.en,{s_q1:"Where is your farm?",s_q2:"What do you need?",s_q3:"What to do",s_q3tag:"Options to confirm with a local technician",s_ins:"What NASA data revealed",s_prohead:"Full analysis — for technicians and judges",
+Object.assign(I18N.en,{lede:"Choose your zone. We tell you what to do, using NASA data.",s_learn_btn:"📚 Learn in 2 minutes",s_see_opts:"See the 3 options",
+ s_m1:"🚫 <b>Low plot:</b> do not sow rice from November to April.",s_m2:l=>`🫘 <b>High plot:</b> rice in the wet season, soybean in the dry season (saves ~${l} million litres/ha).`,s_m3:"🧹 <b>Clean your drains</b> before December.",s_m4:"📅 <b>Dry-season crop:</b> wait until June.",
+ s_n1:"🌾 <b>You can sow rice</b> in the wet season.",s_n2:l=>`🫘 <b>Dry season:</b> soybean instead of rice (saves ~${l} million litres/ha).`,s_n3:"🧹 <b>Keep your drains clean.</b>",
+ s_why:(nd,n0)=>`<b>Why?</b> In Nov–Dec 1997 it rained <b>${nd} mm</b> here. A normal year: ${n0} mm. (NASA POWER)`,s_mc2:p=>`${p}% chance of a very wet season (1,000 simulations, 45 years of NASA data).`,
+ s_q1:"Where is your farm?",s_q2:"What do you need?",s_q3:"What to do",s_q3tag:"Options to confirm with a local technician",s_ins:"What NASA data revealed",s_prohead:"Full analysis — for technicians and judges",
  s_plan:"🌱 I'm going to sow",s_plan_s:"Plan the next season",s_flood:"🌊 My field flooded",s_flood_s:"What can I still sow?",
- s_nino:"<b>Extraordinary El Niño scenario</b> (like 1982–83 and 1997–98) — ERFEN warns of a comparable event. Tap to switch off.",s_nonino:"<b>Normal year</b> — tap to simulate a strong El Niño (like 1997–98).",
+ s_nino:"⚠️ <b>Strong El Niño</b> (like 1997–98): ON",s_nonino:"<b>Normal year</b> · tap to simulate a strong El Niño",
  s_risk:{red:"HIGH",amber:"MEDIUM",green:"LOW"},
  s_title:(z,l)=>`Wet-season rice (Jan–Apr) in ${z}: ${l} flood risk`,
  s_mc:(p)=>`In 1,000 simulated wet seasons built from 45 years of NASA rain data, <b>${p}%</b> were very wet (1.5× normal or more).`,
@@ -516,10 +532,14 @@ Object.assign(I18N.en,{s_q1:"Where is your farm?",s_q2:"What do you need?",s_q3:
  s_i4:"hectares of rice exposed to flooding in Guayas. Salitre, Daule and Santa Lucía hold 64% of the 161,357 ha at risk.",
  s_mct:"Monte Carlo simulation",s_mcs:"1,000 wet seasons resampled from 45 years (1981–2025) of NASA POWER rain, with random variation. Chance that Jan–Apr rain is 1.5× normal or more:",
  s_mcl:"Not every strong El Niño floods the coast: only 3 of the 7 strong events since 1982 brought a very wet season here. ERFEN warns this one could be comparable to 1982–83 and 1997–98.",s_mcl_n:"Any year",s_mcl_s:"Any strong El Niño (7 events since 1982, NOAA)",s_mcl_x:"Extraordinary El Niño (like 1983 and 1998)",
- s_pro_show:"🔬 See the full analysis (live satellite map, charts, 3 strategies, sources)",s_pro_hide:"▲ Hide the full analysis"});
-Object.assign(I18N.es,{s_q1:"¿Dónde está tu finca?",s_q2:"¿Qué necesitas?",s_q3:"Qué hacer",s_q3tag:"Opciones para confirmar con un técnico local",s_ins:"Lo que descubrimos con datos de la NASA",s_prohead:"Análisis completo — para técnicos y jueces",
+ s_pro_show:"🔬 Full analysis (satellite map, data, sources)",s_pro_hide:"▲ Hide the full analysis"});
+Object.assign(I18N.es,{lede:"Elige tu zona. Te decimos qué hacer, con datos de la NASA.",s_learn_btn:"📚 Aprende en 2 minutos",s_see_opts:"Ver las 3 opciones",
+ s_m1:"🚫 <b>Lote bajo:</b> no siembres arroz de noviembre a abril.",s_m2:l=>`🫘 <b>Lote alto:</b> arroz en invierno y soya en verano (ahorras ~${l} millones de litros/ha).`,s_m3:"🧹 <b>Limpia tus drenajes</b> antes de diciembre.",s_m4:"📅 <b>Cultivo de verano:</b> espera a junio.",
+ s_n1:"🌾 <b>Puedes sembrar arroz</b> en invierno.",s_n2:l=>`🫘 <b>En verano:</b> soya en vez de arroz (ahorras ~${l} millones de litros/ha).`,s_n3:"🧹 <b>Mantén limpios tus drenajes.</b>",
+ s_why:(nd,n0)=>`<b>¿Por qué?</b> En nov–dic de 1997 llovieron <b>${nd} mm</b> aquí. Un año normal: ${n0} mm. (NASA POWER)`,s_mc2:p=>`${p}% de probabilidad de un invierno muy lluvioso (1.000 simulaciones, 45 años de datos NASA).`,
+ s_q1:"¿Dónde está tu finca?",s_q2:"¿Qué necesitas?",s_q3:"Qué hacer",s_q3tag:"Opciones para confirmar con un técnico local",s_ins:"Lo que descubrimos con datos de la NASA",s_prohead:"Análisis completo — para técnicos y jueces",
  s_plan:"🌱 Voy a sembrar",s_plan_s:"Planear la próxima temporada",s_flood:"🌊 Se me inundó",s_flood_s:"¿Qué puedo sembrar todavía?",
- s_nino:"<b>Escenario El Niño extraordinario</b> (como 1982–83 y 1997–98) — el ERFEN advierte un evento comparable. Toca para apagarlo.",s_nonino:"<b>Año normal</b> — toca para simular un El Niño fuerte (como 1997–98).",
+ s_nino:"⚠️ <b>El Niño fuerte</b> (como 1997–98): ACTIVADO",s_nonino:"<b>Año normal</b> · toca para simular un El Niño fuerte",
  s_risk:{red:"ALTO",amber:"MEDIO",green:"BAJO"},
  s_title:(z,l)=>`Arroz de invierno (ene–abr) en ${z}: riesgo ${l} de inundación`,
  s_mc:(p)=>`En 1.000 inviernos simulados con 45 años de lluvia de la NASA, <b>${p}%</b> fueron muy lluviosos (1,5 veces lo normal o más).`,
@@ -543,7 +563,7 @@ Object.assign(I18N.es,{s_q1:"¿Dónde está tu finca?",s_q2:"¿Qué necesitas?",
  s_i4:"hectáreas de arroz expuestas a inundación en Guayas. Salitre, Daule y Santa Lucía concentran el 64% de las 161.357 ha en riesgo.",
  s_mct:"Simulación Monte Carlo",s_mcs:"1.000 inviernos re-muestreados de 45 años (1981–2025) de lluvia NASA POWER, con variación aleatoria. Probabilidad de que la lluvia de ene–abr sea 1,5 veces lo normal o más:",
  s_mcl:"No todo El Niño fuerte inunda la Costa: solo 3 de los 7 eventos fuertes desde 1982 trajeron un invierno muy lluvioso aquí. El ERFEN advierte que este podría ser comparable a 1982–83 y 1997–98.",s_mcl_n:"Cualquier año",s_mcl_s:"Cualquier El Niño fuerte (7 eventos desde 1982, NOAA)",s_mcl_x:"El Niño extraordinario (como 1983 y 1998)",
- s_pro_show:"🔬 Ver el análisis completo (mapa satelital en vivo, gráficos, 3 estrategias, fuentes)",s_pro_hide:"▲ Ocultar el análisis completo"});
+ s_pro_show:"🔬 Análisis completo (mapa satelital, datos, fuentes)",s_pro_hide:"▲ Ocultar el análisis completo"});
 let LANG = "en";
 const T = (k,...a)=>{const v=(I18N[LANG][k]??I18N.en[k]??k);return typeof v==="function"?v(...a):v};
 const M = i=>MONTHS[LANG][i-1];
@@ -786,20 +806,21 @@ function renderSimple(){
   const box=document.getElementById("sResult");
   if(SS.need==="plan"){
     const lvl=mc.p>=60?"red":mc.p>=20?"amber":"green", lab=T("s_risk")[lvl];
-    const todo=lvl==="green"||lvl==="amber"&&!SS.nino?[T("s_g1"),T("s_g2",save,litres),T("s_g3")]:[T("s_red1"),T("s_red2",save,litres),T("s_red3",fmt(yr(h,"nd",1997)),fmt(ndMed)),T("s_red4",fmt(yr(h,"may",1998)),fmt(mayMed))];
+    const todo=lvl==="red"?[T("s_m1"),T("s_m2",litres),T("s_m3"),T("s_m4")]:[T("s_n1"),T("s_n2",litres),T("s_n3")];
     const rk=(id)=>id==="S2"?["g",T("s_risk").green]:lvl==="red"?["r",T("s_risk").red]:lvl==="amber"?["a",T("s_risk").amber]:["g",T("s_risk").green];
-    box.innerHTML=`<div class="result ${lvl}"><div class="light"><div class="dot">${lvl==="red"?"!":lvl==="amber"?"~":"✓"}</div><div><h3>${T("s_title",zn,lab)}</h3><p>${T("s_mc",mc.p)}</p></div></div>
-      <div class="lbl" style="margin-top:16px">${T("s_do")}</div><ul class="todo">${todo.map((t,i)=>`<li><span>${["1️⃣","2️⃣","3️⃣","4️⃣"][i]}</span><span>${t}</span></li>`).join("")}</ul>
-      <div class="lbl" style="margin-top:16px">${T("s_opts")}</div>
-      <div class="opts"><div class="optline h"><span>${T("s_col_opt")}</span><span>${T("s_col_w")}</span><span>${T("s_col_r")}</span><span>${T("s_col_s")}</span></div>
-      ${res.map((r,i)=>{const [c,l]=rk(r.st.id);return `<div class="optline"><b>${T("s_"+r.st.id)}</b><span>${drops(r.irr)} <span class="small mono">${r.irr} mm</span></span><span class="tagr ${c}">${l}</span><span>${T("s_soil"+i)}</span></div>`}).join("")}</div></div>`;
+    box.innerHTML=`<div class="result ${lvl}"><div class="light"><div class="dot">${lvl==="red"?"!":lvl==="amber"?"~":"✓"}</div><div><h3>${T("s_title",zn,lab)}</h3><p>${T("s_mc2",mc.p)}</p></div></div>
+      <ul class="todo">${todo.map(t=>`<li><span>${t}</span></li>`).join("")}</ul>
+      <div class="keyfact">${T("s_why",fmt(yr(h,"nd",1997)),fmt(ndMed))}</div>
+      <a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(summaryText())}">${T("wa")}</a>
+      <details><summary>${T("s_see_opts")}</summary><div class="opts"><div class="optline h"><span>${T("s_col_opt")}</span><span>${T("s_col_w")}</span><span>${T("s_col_r")}</span><span>${T("s_col_s")}</span></div>
+      ${res.map((r,i)=>{const [c,l]=rk(r.st.id);return `<div class="optline"><b>${T("s_"+r.st.id)}</b><span>${drops(r.irr)}</span><span class="tagr ${c}">${l}</span><span>${T("s_soil"+i)}</span></div>`}).join("")}</div></details></div>`;
   } else {
     const fo=floodOptions(clim), p=fo[0].p;
     const warn=SS.nino&&p<=5?`<li><span>⚠️</span><span>${T("s_late",fmt(yr(h,"may",1998)))}</span></li>`:"";
     box.innerHTML=`<div class="lbl">${T("s_when")}</div><div class="months6">${[1,2,3,4,5,6].map(m=>`<button class="${m===STATE.rec?"on":""}" data-m="${m}">${M(m)}</button>`).join("")}</div>
       <div class="result amber" style="margin-top:14px"><div class="light"><div class="dot">🌱</div><div><h3>${T("s_sow",M(p))}</h3><p>${T("s_sow_s")}</p></div></div>
       <ul class="todo">${warn}</ul>
-      <div class="fcards">${fo.map(o=>`<div class="fcard"><h4>${o.c==="rice"?"🌾":"🫘"} ${T(o.c)}</h4><div class="big">${T("s_harv",M(o.harvest))}</div><div class="small">${drops(o.need)} ${T("s_lit",o.need,fmt1(o.need/100))}</div><div class="flags">${o.flags.map(([i,t])=>`<div class="flag"><span>${i}</span><span>${t}</span></div>`).join("")}</div></div>`).join("")}</div></div>`;
+      <div class="fcards">${fo.map(o=>`<div class="fcard"><h4>${o.c==="rice"?"🌾":"🫘"} ${T(o.c)}</h4><div class="big">${T("s_harv",M(o.harvest))}</div><div class="small">${drops(o.need)} ${T("s_lit",o.need,fmt1(o.need/100))}</div><div class="flags">${o.flags.slice(0,1).map(([i,t])=>`<div class="flag"><span>${i}</span><span>${t}</span></div>`).join("")}</div></div>`).join("")}</div></div>`;
     box.querySelectorAll(".months6 button").forEach(b=>b.onclick=()=>{STATE.rec=+b.dataset.m;renderAll();});
   }
   document.getElementById("insights").innerHTML=[
@@ -979,7 +1000,10 @@ function applyLang(){
   document.getElementById("chipNdvi").classList.add(ndvi?"ok":"warn");
   if(!DATA.sites.length){document.querySelector(".hero").insertAdjacentHTML("beforeend",'<div class="alert">Data could not be loaded.</div>');return;}
   STATE.site=DATA.sites[0].site_id;
-  initMap(); renderZones(); document.getElementById("proBtn").onclick=togglePro; selectSite(STATE.site);
+  initMap(); renderZones(); document.getElementById("proBtn").onclick=togglePro;
+  const showLearn=e=>{if(e)e.preventDefault();const l=document.getElementById("learn");l.hidden=false;l.scrollIntoView({behavior:"smooth",block:"start"});};
+  document.getElementById("learnBtn").onclick=showLearn; document.querySelector(".navlearn").onclick=showLearn;
+  selectSite(STATE.site);
   setTimeout(()=>{map.invalidateSize();const s0=DATA.sites.find(x=>x.site_id===STATE.site);map.setView([s0.lat,s0.lon],10);},400);
   document.querySelectorAll(".lang button").forEach(b=>b.onclick=()=>{LANG=b.dataset.lang;applyLang();});
   document.querySelectorAll("#scen button").forEach(b=>b.onclick=()=>{
