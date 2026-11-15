@@ -700,11 +700,13 @@ Object.assign(I18N.es,{soil_good:"🌱 Mejora el suelo",
 Object.assign(I18N.en,{farm_q:"How many hectares do you sow? (optional)",
  farm_line:(ha,l)=>`🏡 On your <b>${ha} ha</b>: switching the dry season to soybean saves ≈ <b>${l} million litres</b> of irrigation water a year.`,
  fc_t:"⏱️ Next 12 hours here:",fc_heavy:mm=>`~<b>${mm} mm</b> of rain expected — heavy. Don't spray or fertilize today; check your drains.`,fc_rain:mm=>`~<b>${mm} mm</b> of rain expected.`,fc_dry:"no rain expected.",
+ fc_src:"12-hour forecast from NOAA GFS and ECMWF models, via",
  sci:"📖 What our advice is based on",
  sci_body:"Crop water needs: <a href='https://www.fao.org/4/x0490e/x0490e00.htm' target='_blank' rel='noopener'>FAO-56</a>. Rice→soybean rotation: INIAP soybean guide. Rice that survives under water (SUB1 gene): Bailey-Serres &amp; Voesenek (2010). Rain 1981–2025: <a href='https://power.larc.nasa.gov/' target='_blank' rel='noopener'>NASA POWER</a>. El Niño warning: ERFEN (Nov 2026). Always confirm with a local technician."});
 Object.assign(I18N.es,{farm_q:"¿Cuántas hectáreas siembras? (opcional)",
  farm_line:(ha,l)=>`🏡 En tus <b>${ha} ha</b>: cambiar el verano a soya ahorra ≈ <b>${l} millones de litros</b> de riego al año.`,
  fc_t:"⏱️ Próximas 12 horas aquí:",fc_heavy:mm=>`se esperan ~<b>${mm} mm</b> de lluvia — fuerte. Hoy no fumigues ni abones; revisa tus drenajes.`,fc_rain:mm=>`se esperan ~<b>${mm} mm</b> de lluvia.`,fc_dry:"no se espera lluvia.",
+ fc_src:"Pronóstico de 12 horas de los modelos NOAA GFS y ECMWF, vía",
  sci:"📖 ¿En qué nos basamos?",
  sci_body:"Agua que pide cada cultivo: <a href='https://www.fao.org/4/x0490e/x0490e00.htm' target='_blank' rel='noopener'>FAO-56</a>. Rotación arroz→soya: guía de soya del INIAP. Arroz que sobrevive bajo el agua (gen SUB1): Bailey-Serres y Voesenek (2010). Lluvia 1981–2025: <a href='https://power.larc.nasa.gov/' target='_blank' rel='noopener'>NASA POWER</a>. Aviso de El Niño: ERFEN (nov 2026). Confirma siempre con un técnico local."});
 let LANG = "en";
@@ -945,7 +947,7 @@ async function loadForecast(site){
     const mm=(d.hourly.precipitation||[]).reduce((a,b)=>a+(b||0),0);
     const el=document.getElementById("fcBox"); if(!el) return;
     el.hidden=false;
-    el.innerHTML=`<b>${T("fc_t")}</b> ${mm>=10?T("fc_heavy",fmt(mm)):mm>=1?T("fc_rain",fmt1(mm)):T("fc_dry")} <span class="src"><a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a></span>`;
+    el.innerHTML=`<b>${T("fc_t")}</b> ${mm>=10?T("fc_heavy",fmt(mm)):mm>=1?T("fc_rain",fmt1(mm)):T("fc_dry")} <span class="src">${T("fc_src")} <a href="https://open-meteo.com/docs" target="_blank" rel="noopener">Open-Meteo</a></span>`;
   }catch(e){}
 }
 function drops(mm){return mm<300?"💧":mm<600?"💧💧":"💧💧💧";}
