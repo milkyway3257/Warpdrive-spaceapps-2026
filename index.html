@@ -359,6 +359,12 @@ footer h5{font-family:var(--sans);letter-spacing:0;text-transform:none;font-size
 .lothelp{margin:6px 0 10px;font-size:16px}
 #lotMap{height:min(58vh,460px);border-radius:12px}
 .lotdate{margin-top:6px;font-size:14px}
+.scen{margin-top:12px;padding:12px 14px;border-radius:12px;background:#FFF8E6;border:1.5px solid #EAD39A}
+.scen .lbl{font-weight:700;margin-bottom:8px;font-size:16px}
+.scrow{display:grid;grid-template-columns:minmax(120px,170px) 1fr;gap:10px;padding:8px 0;border-top:1px solid #EFE2BF;font-size:15px}
+@media(max-width:600px){.scrow{grid-template-columns:1fr;gap:2px}}
+.listenbtn{display:inline-block;margin-bottom:10px;padding:10px 16px;font:700 16px var(--sans);border-radius:999px;border:2px solid #2F6B3A;background:#fff;color:#1E4A27;cursor:pointer}
+.hazleg{margin-top:6px;font-size:14px}
 @media(max-width:600px){#lotMap{height:42vh}.lotcard{padding:10px}.lothelp{font-size:15px;margin:4px 0 8px}.lotarea{font-size:17px;margin:6px 0}.lotbtns{gap:6px}.lotbtns button{flex:1 1 45%;padding:9px;font-size:14px}}
 .lotarea{margin:10px 0;font-size:20px;font-weight:700}
 .lotbtns{display:flex;flex-wrap:wrap;gap:8px}
@@ -422,12 +428,14 @@ footer h5{font-family:var(--sans);letter-spacing:0;text-transform:none;font-size
       <p class="lothelp" data-i18n="lot_help">Tap the corners of your plot on the satellite photo. Or walk around its edge with your phone.</p>
       <div id="lotMap"></div>
       <div class="lotdate" id="lotDate"></div>
+      <div class="hazleg" id="lotHazLeg" hidden></div>
       <div class="lotarea" id="lotArea"></div>
       <div class="lotbtns">
         <button type="button" id="lotMe" data-i18n="lot_me">📍 Go to where I am</button>
         <button type="button" id="lotWalk" data-i18n="lot_walk">🚶 Walk the edge (GPS)</button>
         <button type="button" id="lotUndo" data-i18n="lot_undo">↩️ Undo</button>
         <button type="button" id="lotClear" data-i18n="lot_clear">🗑️ Start over</button>
+        <button type="button" id="lotHaz" data-i18n="lot_haz">🌊 Where does it flood? (NASA)</button>
         <button type="button" class="ok" id="lotOk" data-i18n="lot_ok">✅ Done</button>
       </div>
     </div>
@@ -735,6 +743,13 @@ Object.assign(I18N.en,{farm_q:"How many hectares do you sow? (optional)",
  fc_t:"⏱️ Next 12 hours here:",fc_heavy:mm=>`~<b>${mm} mm</b> of rain expected — heavy. Don't spray or fertilize today; check your drains.`,fc_rain:mm=>`~<b>${mm} mm</b> of rain expected.`,fc_dry:"no rain expected.",
  fc_src:"12-hour forecast from NOAA GFS and ECMWF models, via",
  img_date:(d,old)=>`📷 Satellite photo from <b>${d}</b> (Esri). Not live.${old?" ⚠️ It is old: your plot may look different today.":""}`,photo:"photo from",
+ sc_t:"How long will El Niño last? Nobody knows for sure. Be ready for 3 cases:",
+ sc1:"🟢 It ends in December",sc1a:"Almost normal wet season: sow rice in January on your high plot.",
+ sc2:"🟡 It lasts until April",sc2a:"Do not sow your low plot until the water goes down. Use “My field flooded” to pick the month.",
+ sc3:"🔴 It lasts until June",sc3a:(a,b,m)=>`Like 1983 and 1998 (in May it rained ${a} and ${b} mm here; normal is ${m}). Keep your seed and sow the dry-season crop from June.`,
+ sc_note:"📊 Only 2 extraordinary El Niños in 45 years (1983 and 1998). With so few cases, this is a guide, not a certainty. Check the ERFEN warning every month.",
+ lot_haz:"🌊 Where does it flood? (NASA)",lot_haz_off:"🌊 Hide floods",
+ lot_haz_leg:"Blue = area that flooded often (NASA, 1985–2003). No colour = rarely flooded: safer to sow there.",
  lot_btn:"🗺️ Mark my plot on the map",lot_t:"Mark your plot",lot_help:"Tap the corners of your plot on the satellite photo. Or walk around its edge with your phone.",
  lot_me:"📍 Go to where I am",lot_walk:"🚶 Walk the edge (GPS)",lot_stop:"⏹️ Stop walking",lot_undo:"↩️ Undo",lot_clear:"🗑️ Start over",lot_ok:"✅ Done",
  lot_area:ha=>`Area: ${ha} ha`,lot_need:"Mark at least 3 corners.",lot_nogps:"Location not available. Allow location, or tap the corners.",
@@ -750,6 +765,13 @@ Object.assign(I18N.es,{farm_q:"¿Cuántas hectáreas siembras? (opcional)",
  fc_t:"⏱️ Próximas 12 horas aquí:",fc_heavy:mm=>`se esperan ~<b>${mm} mm</b> de lluvia — fuerte. Hoy no fumigues ni abones; revisa tus drenajes.`,fc_rain:mm=>`se esperan ~<b>${mm} mm</b> de lluvia.`,fc_dry:"no se espera lluvia.",
  fc_src:"Pronóstico de 12 horas de los modelos NOAA GFS y ECMWF, vía",
  img_date:(d,old)=>`📷 Foto satelital del <b>${d}</b> (Esri). No es en vivo.${old?" ⚠️ Es antigua: tu lote puede verse distinto hoy.":""}`,photo:"foto de",
+ sc_t:"¿Hasta cuándo dura El Niño? Nadie lo sabe con certeza. Prepárate para 3 casos:",
+ sc1:"🟢 Se va en diciembre",sc1a:"Invierno casi normal: siembra arroz en enero en tu lote alto.",
+ sc2:"🟡 Sigue hasta abril",sc2a:"No siembres tu lote bajo hasta que baje el agua. Usa «Se me inundó» para elegir el mes.",
+ sc3:"🔴 Sigue hasta junio",sc3a:(a,b,m)=>`Como en 1983 y 1998 (en mayo llovieron ${a} y ${b} mm aquí; lo normal es ${m}). Guarda tu semilla y siembra el cultivo de verano desde junio.`,
+ sc_note:"📊 Solo hubo 2 Niños extraordinarios en 45 años (1983 y 1998). Con tan pocos casos, esto es una guía, no una certeza. Revisa cada mes el aviso del ERFEN.",
+ lot_haz:"🌊 ¿Dónde se inunda? (NASA)",lot_haz_off:"🌊 Ocultar inundación",
+ lot_haz_leg:"Azul = zona que se inundó seguido (NASA, 1985–2003). Sin color = rara vez se inundó: ahí es más seguro sembrar.",
  lot_btn:"🗺️ Marcar mi lote en el mapa",lot_t:"Marca tu lote",lot_help:"Toca las esquinas de tu lote sobre la foto satelital. O camina por el borde con tu celular.",
  lot_me:"📍 Ir a donde estoy",lot_walk:"🚶 Caminar el borde (GPS)",lot_stop:"⏹️ Terminar caminata",lot_undo:"↩️ Deshacer",lot_clear:"🗑️ Empezar de nuevo",lot_ok:"✅ Listo",
  lot_area:ha=>`Área: ${ha} ha`,lot_need:"Marca al menos 3 esquinas.",lot_nogps:"No se pudo ver tu ubicación. Permite la ubicación o toca las esquinas.",
@@ -1050,6 +1072,12 @@ function lotOpen(){
         if(last&&LOT.map.distance(last,q)<4) return; LOT.pts.push(q); LOT.map.setView(q,Math.max(LOT.map.getZoom(),17)); lotDraw();
       },()=>{lotStopWalk();alert(T("lot_nogps"));},{enableHighAccuracy:true,maximumAge:0,timeout:20000}); };
     document.getElementById("lotOk").onclick=lotSave;
+    document.getElementById("lotHaz").onclick=()=>{ const b=document.getElementById("lotHaz"), lg=document.getElementById("lotHazLeg");
+      if(LOT.haz){LOT.map.removeLayer(LOT.haz);LOT.haz=null;b.textContent=T("lot_haz");lg.hidden=true;return;}
+      const hz=LAYERS.find(x=>x.id==="hazard");
+      LOT.haz=L.tileLayer(hz.url(),{maxNativeZoom:7,maxZoom:19,opacity:.6,attribution:"NASA SEDAC / GIBS"}).addTo(LOT.map);
+      if(LOT.map.getZoom()>12) LOT.map.setZoom(12);
+      b.textContent=T("lot_haz_off"); lg.textContent=T("lot_haz_leg"); lg.hidden=false; };
   } else if(!LOT.pts.length){ LOT.map.setView(paddyPoint(STATE.site)||LOT.map.getCenter(),16); }
   setTimeout(()=>{LOT.map.invalidateSize(); if(LOT.pts.length>=3) LOT.map.fitBounds(LOT.pts,{padding:[30,30]}); lotDateShow();},150);
   lotDraw();
@@ -1118,7 +1146,17 @@ function renderSimple(){
   }
   const ha=+(lsGet("ss_ha")||0);
   const farm=(SS.need==="plan"&&ha>0)?`<div class="keyfact">${T("farm_line",ha,fmt1(ha*(res[0].irr-res[1].irr)/100))}</div>`:"";
-  box.insertAdjacentHTML("beforeend",`${lotLine()}${farm}<div class="fcbox" id="fcBox" hidden></div><details class="scinote"><summary>${T("sci")}</summary><div class="small">${T("sci_body")}</div></details>`);
+  const scen=(SS.need==="plan"&&SS.nino)?`<div class="scen"><div class="lbl">${T("sc_t")}</div>
+    <div class="scrow"><b>${T("sc1")}</b><span>${T("sc1a")}</span></div>
+    <div class="scrow"><b>${T("sc2")}</b><span>${T("sc2a")}</span></div>
+    <div class="scrow"><b>${T("sc3")}</b><span>${T("sc3a",fmt(yr(h,"may",1983)),fmt(yr(h,"may",1998)),fmt(mayMed))}</span></div>
+    <div class="small">${T("sc_note")}</div></div>`:"";
+  box.insertAdjacentHTML("afterbegin",`<button type="button" class="listenbtn" id="sListen">${T("listen")}</button>`);
+  document.getElementById("sListen").onclick=e=>{
+    const parts=[...box.querySelectorAll(".result h3, .result > .light p, .todo li, .scen .lbl, .scrow, .bigmonth + div h3, .fcard h4, .fcard .big")].map(x=>x.innerText);
+    speak(parts.join(". ").replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu,"").replace(/\s+/g," "),e.currentTarget);
+  };
+  box.insertAdjacentHTML("beforeend",`${scen}${lotLine()}${farm}<div class="fcbox" id="fcBox" hidden></div><details class="scinote"><summary>${T("sci")}</summary><div class="small">${T("sci_body")}</div></details>`);
   loadForecast(site);
   document.getElementById("insights").innerHTML=[
     [fmt(yr(h,"nd",1997))+" mm","c-red",T("s_i1",fmt(yr(h,"nd",1997)),fmt(ndMed)+" mm"),"NASA POWER (PRECTOTCORR, monthly)","https://power.larc.nasa.gov/"],
