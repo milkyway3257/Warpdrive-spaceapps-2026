@@ -359,6 +359,10 @@ footer h5{font-family:var(--sans);letter-spacing:0;text-transform:none;font-size
 .lothelp{margin:6px 0 10px;font-size:16px}
 #lotMap{height:min(58vh,460px);border-radius:12px}
 .lotdate{margin-top:6px;font-size:14px}
+.lotzone{margin-top:6px;padding:8px 12px;border-radius:10px;background:#E4EFE1;font-size:16px}
+.lotzone.out{background:#FCEBD0}
+.zonelbl{background:#14261A;color:#fff;border:0;font:700 13px var(--sans);padding:3px 8px;border-radius:8px;box-shadow:none}
+.zonelbl:before{display:none}
 .scen{margin-top:12px;padding:12px 14px;border-radius:12px;background:#FFF8E6;border:1.5px solid #EAD39A}
 .scen .lbl{font-weight:700;margin-bottom:8px;font-size:16px}
 .scrow{display:grid;grid-template-columns:minmax(120px,170px) 1fr;gap:10px;padding:8px 0;border-top:1px solid #EFE2BF;font-size:15px}
@@ -425,6 +429,7 @@ footer h5{font-family:var(--sans);letter-spacing:0;text-transform:none;font-size
   <div class="lotmodal" id="lotModal" hidden>
     <div class="lotcard">
       <div class="lothead"><b data-i18n="lot_t">Mark your plot</b><button type="button" class="lotx" id="lotClose" aria-label="Close">✖</button></div>
+      <div class="lotzone" id="lotZone"></div>
       <p class="lothelp" data-i18n="lot_help">Tap the corners of your plot on the satellite photo. Or walk around its edge with your phone.</p>
       <div id="lotMap"></div>
       <div class="lotdate" id="lotDate"></div>
@@ -750,6 +755,10 @@ Object.assign(I18N.en,{farm_q:"How many hectares do you sow? (optional)",
  sc_note:"📊 Only 2 extraordinary El Niños in 45 years (1983 and 1998). With so few cases, this is a guide, not a certainty. Check the ERFEN warning every month.",
  lot_haz:"🌊 Where does water pool?",lot_haz_off:"🌊 Hide",lot_haz_wait:"Measuring heights…",
  lot_haz_leg:"🔵 Blue = lower than the rest of this area: water pools there first. 🟢 Green = higher: safer to keep sowing even with El Niño. Satellite height (Copernicus DEM, 90 m). Confirm in the field.",
+ zone_in:z=>`📍 You are in the <b>${z}</b> zone`,
+ zone_out:(z,km)=>`📍 Outside SafeSow's 4 zones. Nearest: <b>${z}</b> (${km} km away). Area and height still work.`,
+ gps_wait:"📡 Looking for GPS signal… walk slowly.",gps_weak:a=>`📡 Weak GPS signal (± ${a} m). Go to an open area.`,
+ me_wait:"📍 Finding where you are…",
  lot_btn:"🗺️ Mark my plot on the map",lot_t:"Mark your plot",lot_help:"Tap the corners of your plot on the satellite photo. Or walk around its edge with your phone.",
  lot_me:"📍 Go to where I am",lot_walk:"🚶 Walk the edge (GPS)",lot_stop:"⏹️ Stop walking",lot_undo:"↩️ Undo",lot_clear:"🗑️ Start over",lot_ok:"✅ Done",
  lot_area:ha=>`Area: ${ha} ha`,lot_need:"Mark at least 3 corners.",lot_nogps:"Location not available. Allow location, or tap the corners.",
@@ -772,6 +781,10 @@ Object.assign(I18N.es,{farm_q:"¿Cuántas hectáreas siembras? (opcional)",
  sc_note:"📊 Solo hubo 2 Niños extraordinarios en 45 años (1983 y 1998). Con tan pocos casos, esto es una guía, no una certeza. Revisa cada mes el aviso del ERFEN.",
  lot_haz:"🌊 ¿Dónde se encharca?",lot_haz_off:"🌊 Ocultar",lot_haz_wait:"Midiendo alturas…",
  lot_haz_leg:"🔵 Azul = más bajo que el resto de esta zona: ahí se encharca primero. 🟢 Verde = más alto: más seguro para seguir sembrando aunque haya El Niño. Altura por satélite (Copernicus DEM, 90 m). Confírmalo en el campo.",
+ zone_in:z=>`📍 Estás en la zona de <b>${z}</b>`,
+ zone_out:(z,km)=>`📍 Fuera de las 4 zonas de SafeSow. Lo más cercano: <b>${z}</b> (a ${km} km). El área y la altura sí funcionan.`,
+ gps_wait:"📡 Buscando señal GPS… camina despacio.",gps_weak:a=>`📡 Señal GPS débil (± ${a} m). Ve a un lugar abierto.`,
+ me_wait:"📍 Buscando dónde estás…",
  lot_btn:"🗺️ Marcar mi lote en el mapa",lot_t:"Marca tu lote",lot_help:"Toca las esquinas de tu lote sobre la foto satelital. O camina por el borde con tu celular.",
  lot_me:"📍 Ir a donde estoy",lot_walk:"🚶 Caminar el borde (GPS)",lot_stop:"⏹️ Terminar caminata",lot_undo:"↩️ Deshacer",lot_clear:"🗑️ Empezar de nuevo",lot_ok:"✅ Listo",
  lot_area:ha=>`Área: ${ha} ha`,lot_need:"Marca al menos 3 esquinas.",lot_nogps:"No se pudo ver tu ubicación. Permite la ubicación o toca las esquinas.",
@@ -1034,6 +1047,11 @@ async function imgDate(lat,lon){
 }
 const fmtD=dt=>dt.toLocaleDateString(LANG==="es"?"es-EC":"en-US",{day:"numeric",month:"short",year:"numeric"});
 async function lotDateShow(){const el=document.getElementById("lotDate"); if(!el||!LOT.map) return; const c=LOT.map.getCenter(); const dt=await imgDate(c.lat,c.lng); el.innerHTML=dt?T("img_date",fmtD(dt),(Date.now()-dt)>2*3.156e10):"";}
+const ZONE_KM=20;
+function nearestSite(lat,lon){let best=null;DATA.sites.forEach(x=>{const d=L.latLng(lat,lon).distanceTo([+x.lat,+x.lon])/1000;if(!best||d<best.d)best={s:x,d};});return best;}
+function lotZoneShow(){const el=document.getElementById("lotZone"); if(!el||!LOT.map) return; const c=LOT.map.getCenter(), n=nearestSite(c.lat,c.lng); if(!n) return;
+  const z=n.s.site_name; el.classList.toggle("out",n.d>ZONE_KM); el.innerHTML=n.d>ZONE_KM?T("zone_out",z,fmt(n.d)):T("zone_in",z);}
+function lotMsg(t){document.getElementById("lotArea").textContent=t;}
 const LOT={pts:[],map:null,poly:null,marks:null,watch:null,proPoly:null};
 function lotHa(pts){ // geodesic polygon area, m2 -> ha
   if(pts.length<3) return 0; const R=6378137,rad=Math.PI/180; let a=0;
@@ -1052,25 +1070,34 @@ function lotStopWalk(){ if(LOT.watch!==null){navigator.geolocation.clearWatch(LO
 function lotOpen(){
   const m=document.getElementById("lotModal"); m.hidden=false;
   let saved=null; try{saved=JSON.parse(lsGet("ss_lot")||"null")}catch(e){}
-  LOT.pts=saved&&saved.pts?saved.pts:[];
+  const pp=paddyPoint(STATE.site), cur=DATA.sites.find(x=>x.site_id===STATE.site);
+  const near=saved&&saved.pts&&saved.pts.length>=3&&cur&&L.latLng(saved.pts[0]).distanceTo([+cur.lat,+cur.lon])/1000<=ZONE_KM;
+  LOT.pts=near?saved.pts.slice():[];
   if(!LOT.map){
     LOT.map=L.map("lotMap",{zoomControl:true}).setView(paddyPoint(STATE.site)||[-1.878,-79.945],16);
     L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,maxNativeZoom:18,attribution:"Esri World Imagery"}).addTo(LOT.map);
-    LOT.marks=L.layerGroup().addTo(LOT.map); LOT.map.on("moveend",lotDateShow);
+    LOT.marks=L.layerGroup().addTo(LOT.map); LOT.map.on("moveend",()=>{lotDateShow();lotZoneShow();});
+    DATA.sites.forEach(x=>L.circleMarker([+x.lat,+x.lon],{radius:5,color:"#fff",weight:2,fillColor:"#14261A",fillOpacity:1,interactive:false}).bindTooltip(x.site_name.split(",")[0],{permanent:true,direction:"right",className:"zonelbl",offset:[6,0]}).addTo(LOT.map));
     LOT.map.on("click",e=>{if(LOT.watch!==null) return; LOT.pts.push([e.latlng.lat,e.latlng.lng]); lotDraw();});
     document.getElementById("lotClose").onclick=lotClose;
     document.getElementById("lotUndo").onclick=()=>{LOT.pts.pop();lotDraw();};
     document.getElementById("lotClear").onclick=()=>{LOT.pts=[];lotDraw();};
-    document.getElementById("lotMe").onclick=()=>{ if(!navigator.geolocation){alert(T("lot_nogps"));return;}
-      navigator.geolocation.getCurrentPosition(p=>LOT.map.setView([p.coords.latitude,p.coords.longitude],17),()=>alert(T("lot_nogps")),{enableHighAccuracy:true,timeout:15000}); };
+    document.getElementById("lotMe").onclick=()=>{ if(!navigator.geolocation){lotMsg(T("lot_nogps"));return;}
+      lotMsg(T("me_wait"));
+      navigator.geolocation.getCurrentPosition(p=>{const q=[p.coords.latitude,p.coords.longitude];
+        if(LOT.me) LOT.map.removeLayer(LOT.me);
+        LOT.me=L.circleMarker(q,{radius:8,color:"#fff",weight:3,fillColor:"#1A73E8",fillOpacity:1,interactive:false}).addTo(LOT.map);
+        LOT.map.setView(q,17); lotDraw();},()=>lotMsg(T("lot_nogps")),{enableHighAccuracy:true,timeout:15000}); };
     document.getElementById("lotWalk").onclick=()=>{ const b=document.getElementById("lotWalk");
       if(LOT.watch!==null){lotStopWalk();return;}
-      if(!navigator.geolocation){alert(T("lot_nogps"));return;}
-      LOT.pts=[]; lotDraw(); b.textContent=T("lot_stop"); b.classList.add("rec");
+      if(!navigator.geolocation){lotMsg(T("lot_nogps"));return;}
+      LOT.pts=[]; lotDraw(); lotMsg(T("gps_wait")); b.textContent=T("lot_stop"); b.classList.add("rec");
       LOT.watch=navigator.geolocation.watchPosition(p=>{
-        if(p.coords.accuracy>30) return; const q=[p.coords.latitude,p.coords.longitude], last=LOT.pts[LOT.pts.length-1];
+        if(p.coords.accuracy>30){ if(LOT.pts.length<3) lotMsg(T("gps_weak",Math.round(p.coords.accuracy))); return; }
+        const q=[p.coords.latitude,p.coords.longitude], last=LOT.pts[LOT.pts.length-1];
         if(last&&LOT.map.distance(last,q)<4) return; LOT.pts.push(q); LOT.map.setView(q,Math.max(LOT.map.getZoom(),17)); lotDraw();
-      },()=>{lotStopWalk();alert(T("lot_nogps"));},{enableHighAccuracy:true,maximumAge:0,timeout:20000}); };
+        if(LOT.pts.length<3) lotMsg(T("gps_wait"));
+      },()=>{lotStopWalk();lotMsg(T("lot_nogps"));},{enableHighAccuracy:true,maximumAge:0,timeout:20000}); };
     document.getElementById("lotOk").onclick=lotSave;
     document.getElementById("lotHaz").onclick=()=>{ const b=document.getElementById("lotHaz"), lg=document.getElementById("lotHazLeg");
       if(LOT.haz){LOT.map.removeLayer(LOT.haz);LOT.haz=null;b.textContent=T("lot_haz");lg.hidden=true;return;}
@@ -1084,8 +1111,8 @@ function lotOpen(){
           L.rectangle([[c[0]-dla/2,c[1]-dlo/2],[c[0]+dla/2,c[1]+dlo/2]],{stroke:false,fillColor:d<0?"#1d4ed8":"#16a34a",fillOpacity:.38,interactive:false}).addTo(LOT.haz);});
         LOT.haz.addTo(LOT.map); b.textContent=T("lot_haz_off"); lg.textContent=T("lot_haz_leg"); lg.hidden=false;
       }).catch(()=>{b.textContent=T("lot_haz");}); };
-  } else if(!LOT.pts.length){ LOT.map.setView(paddyPoint(STATE.site)||LOT.map.getCenter(),16); }
-  setTimeout(()=>{LOT.map.invalidateSize(); if(LOT.pts.length>=3) LOT.map.fitBounds(LOT.pts,{padding:[30,30]}); lotDateShow();},150);
+  } else if(!LOT.pts.length){ LOT.map.setView(pp||LOT.map.getCenter(),16); }
+  setTimeout(()=>{LOT.map.invalidateSize(); if(LOT.pts.length>=3) LOT.map.fitBounds(LOT.pts,{padding:[30,30]}); lotDateShow(); lotZoneShow();},150);
   lotDraw();
 }
 function lotClose(){ lotStopWalk(); document.getElementById("lotModal").hidden=true; }
@@ -1102,7 +1129,9 @@ async function lotSave(){
   }catch(err){}
   lsSet("ss_lot",JSON.stringify({pts:LOT.pts,ha,rel}));
   lsSet("ss_ha",String(ha)); const hi=document.getElementById("haIn"); if(hi) hi.value=ha;
-  lotClose(); lotShowPro(); renderSimple();
+  lotClose(); lotShowPro();
+  const ns=nearestSite(c[0],c[1]);
+  if(ns&&ns.d<=ZONE_KM&&ns.s.site_id!==STATE.site) selectSite(ns.s.site_id); else renderSimple();
 }
 function lotShowPro(){
   if(typeof map==="undefined"||!map) return; let sv=null; try{sv=JSON.parse(lsGet("ss_lot")||"null")}catch(e){}
@@ -1111,6 +1140,7 @@ function lotShowPro(){
 }
 function lotLine(){
   let sv=null; try{sv=JSON.parse(lsGet("ss_lot")||"null")}catch(e){} if(!sv||!sv.pts) return "";
+  const cur=DATA.sites.find(x=>x.site_id===STATE.site); if(cur&&L.latLng(sv.pts[0]).distanceTo([+cur.lat,+cur.lon])/1000>ZONE_KM) return "";
   const r=sv.rel, k=r==null?"":r<=-1?T("lot_low",fmt1(-r)):r>=1?T("lot_high",fmt1(r)):T("lot_same");
   return `<div class="keyfact">${T("lot_res",fmt1(sv.ha),k)}${r==null?"":`<div class="small" style="margin-top:4px">${T("lot_cav")}</div>`}</div>`;
 }
