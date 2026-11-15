@@ -379,7 +379,9 @@ footer h5{font-family:var(--sans);letter-spacing:0;text-transform:none;font-size
 .fc-tabs{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px 0}
 .fc-tabs button{padding:7px 12px;border-radius:999px;border:1.5px solid #3D5A47;background:#1C3326;color:#E8F0E6;font:700 13px var(--sans);cursor:pointer}
 .fc-tabs button.on{background:#FFD23F;color:#13241A;border-color:#FFD23F}
-.fc-name{font:700 15px var(--sans);color:#FFD23F;margin-bottom:4px}
+.fc-name{display:flex;align-items:center;gap:6px;font:700 16px var(--sans);color:#FFD23F;margin-bottom:4px}
+.fc-ren{border:0;background:none;cursor:pointer;font-size:16px;padding:2px 4px}
+.fc-name input{font:700 16px var(--sans);padding:6px 8px;border-radius:8px;border:2px solid #FFD23F;background:#0E1A14;color:#fff;width:100%;max-width:210px}
 .fc-btns button.add{background:#2E6B30;border-color:#2E6B30}
 @media(max-width:600px){.fc-body{grid-template-columns:1fr}.fc-big{font-size:56px}}
 .lotzone{margin-top:6px;padding:8px 12px;border-radius:10px;background:#E4EFE1;font-size:16px}
@@ -784,6 +786,7 @@ Object.assign(I18N.en,{farm_q:"How many hectares do you sow? (optional)",
  gps_wait:"📡 Looking for GPS signal… walk slowly.",gps_weak:a=>`📡 Weak GPS signal (± ${a} m). Go to an open area.`,
  me_wait:"📍 Finding where you are…",
  fc_total:(t,n)=>`Total: ${t} ha in ${n} plots`,fc_add:"➕ Add another plot",lot_n:n=>`Plot ${n}`,lot_new:n=>`New plot (Plot ${n})`,lot_editing:x=>`Editing: ${x}`,
+ fc_ren:"Rename",
  fc_title:"My farm",fc_saved:d=>`Saved ${d}`,fc_out:"Outside SafeSow's 4 zones",
  fc_low:m=>`<b>Low plot</b>: ≈${m} m lower than its surroundings`,fc_high:m=>`<b>High plot</b>: ≈${m} m higher than its surroundings`,
  fc_same:"About as high as its surroundings",fc_nolvl:"Height pending: tap Edit → Done when you have internet",
@@ -817,6 +820,7 @@ Object.assign(I18N.es,{farm_q:"¿Cuántas hectáreas siembras? (opcional)",
  gps_wait:"📡 Buscando señal GPS… camina despacio.",gps_weak:a=>`📡 Señal GPS débil (± ${a} m). Ve a un lugar abierto.`,
  me_wait:"📍 Buscando dónde estás…",
  fc_total:(t,n)=>`Total: ${t} ha en ${n} lotes`,fc_add:"➕ Agregar otro lote",lot_n:n=>`Lote ${n}`,lot_new:n=>`Nuevo lote (Lote ${n})`,lot_editing:x=>`Editando: ${x}`,
+ fc_ren:"Cambiar nombre",
  fc_title:"Mi finca",fc_saved:d=>`Guardado el ${d}`,fc_out:"Fuera de las 4 zonas de SafeSow",
  fc_low:m=>`<b>Lote bajo</b>: ≈${m} m más bajo que su alrededor`,fc_high:m=>`<b>Lote alto</b>: ≈${m} m más alto que su alrededor`,
  fc_same:"A la misma altura que su alrededor",fc_nolvl:"Altura pendiente: toca Editar → Listo cuando tengas internet",
@@ -1115,17 +1119,22 @@ function renderFarmCard(){
   const tabs=all.length>1?`<div class="fc-tabs">${all.map(x=>`<button type="button" class="${x.id===sv.id?"on":""}" data-id="${x.id}">${lotName(x,all)} · ${fmt1(x.ha)} ha</button>`).join("")}</div>`:"";
   el.innerHTML=`<div class="fc-head"><b>🏡 ${T("fc_title")}</b><span>${all.length>1?T("fc_total",fmt1(tot),all.length):(when?T("fc_saved",when):"")}</span></div>${tabs}
     <div class="fc-body"><div id="fcMap" role="img" aria-label="${lotName(sv,all)}"></div>
-      <div><div class="fc-name">${lotName(sv,all)}${all.length>1&&when?" · "+when:""}</div><div class="fc-big">${fmt1(sv.ha)}<small>ha</small></div>
+      <div><div class="fc-name" id="fcName"><span>${lotName(sv,all)}</span><button type="button" class="fc-ren" id="fcRen" title="${T("fc_ren")}" aria-label="${T("fc_ren")}">✏️</button></div><div class="fc-big">${fmt1(sv.ha)}<small>ha</small></div>
         <div class="fc-row"><span>📍</span><span>${zone}</span></div>
-        <div class="fc-row"><span>⛰️</span><span>${lvl}</span></div>
-        <div class="fc-row"><span>💧</span><span>${T("fc_water",fmt1(sv.ha*(r0.irr-r1.irr)/100))}</span></div>
-        <div class="fc-row"><span>🧭</span><span class="mono">${c[0].toFixed(5)}, ${c[1].toFixed(5)}</span></div></div></div>
+        <div class="fc-row"><span>⛰️</span><span>${lvl}</span></div></div></div>
     <div class="fc-btns"><button type="button" class="add" id="fcAdd">${T("fc_add")}</button>
       <a href="https://www.google.com/maps?q=${c[0].toFixed(6)},${c[1].toFixed(6)}" target="_blank" rel="noopener">${T("fc_gmaps")}</a>
       <button type="button" id="fcEdit">${T("fc_edit")}</button><button type="button" id="fcDel">${T("fc_del")}</button></div>
     <div class="fc-priv">${T("fc_priv")}</div>`;
   el.querySelectorAll(".fc-tabs button").forEach(b=>b.onclick=()=>{lsSet("ss_lot_act",b.dataset.id); FC_KEY=""; renderSimple();});
   document.getElementById("fcAdd").onclick=()=>lotOpen(true);
+  document.getElementById("fcRen").onclick=()=>{ const box=document.getElementById("fcName");
+    box.innerHTML=`<input id="fcNameIn" maxlength="24" value="${lotName(sv,all)}" aria-label="${T("fc_ren")}"><button type="button" class="fc-ren" id="fcRenOk" aria-label="OK">✅</button>`;
+    const inp=document.getElementById("fcNameIn"); inp.focus(); inp.select();
+    const save=()=>{ if(save.done) return; save.done=1; const v=inp.value.replace(/[<>&"]/g,"").trim().slice(0,24);
+      const a=lotsGet(), x=a.find(y=>y.id===sv.id); if(x){x.name=v||null; lotsSet(a);} FC_KEY=""; renderSimple(); };
+    inp.onkeydown=e=>{ if(e.key==="Enter") save(); if(e.key==="Escape"){save.done=1; FC_KEY=""; renderSimple();} };
+    const ok=document.getElementById("fcRenOk"); ok.onmousedown=e=>e.preventDefault(); ok.onclick=save; inp.onblur=save; };
   document.getElementById("fcEdit").onclick=()=>lotOpen(false);
   const del=document.getElementById("fcDel");
   del.onclick=()=>{ if(!del.classList.contains("warn")){del.classList.add("warn");del.textContent=T("fc_del2");setTimeout(()=>{if(del.isConnected){del.classList.remove("warn");del.textContent=T("fc_del");}},4000);return;}
