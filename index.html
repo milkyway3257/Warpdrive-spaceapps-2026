@@ -748,8 +748,8 @@ Object.assign(I18N.en,{farm_q:"How many hectares do you sow? (optional)",
  sc2:"🟡 It lasts until April",sc2a:"Do not sow your low plot until the water goes down. Use “My field flooded” to pick the month.",
  sc3:"🔴 It lasts until June",sc3a:(a,b,m)=>`Like 1983 and 1998 (in May it rained ${a} and ${b} mm here; normal is ${m}). Keep your seed and sow the dry-season crop from June.`,
  sc_note:"📊 Only 2 extraordinary El Niños in 45 years (1983 and 1998). With so few cases, this is a guide, not a certainty. Check the ERFEN warning every month.",
- lot_haz:"🌊 Where does it flood? (NASA)",lot_haz_off:"🌊 Hide floods",
- lot_haz_leg:"Blue = area that flooded often (NASA, 1985–2003). No colour = rarely flooded: safer to sow there.",
+ lot_haz:"🌊 Where does water pool?",lot_haz_off:"🌊 Hide",lot_haz_wait:"Measuring heights…",
+ lot_haz_leg:"🔵 Blue = lower than the rest of this area: water pools there first. 🟢 Green = higher: safer to keep sowing even with El Niño. Satellite height (Copernicus DEM, 90 m). Confirm in the field.",
  lot_btn:"🗺️ Mark my plot on the map",lot_t:"Mark your plot",lot_help:"Tap the corners of your plot on the satellite photo. Or walk around its edge with your phone.",
  lot_me:"📍 Go to where I am",lot_walk:"🚶 Walk the edge (GPS)",lot_stop:"⏹️ Stop walking",lot_undo:"↩️ Undo",lot_clear:"🗑️ Start over",lot_ok:"✅ Done",
  lot_area:ha=>`Area: ${ha} ha`,lot_need:"Mark at least 3 corners.",lot_nogps:"Location not available. Allow location, or tap the corners.",
@@ -770,8 +770,8 @@ Object.assign(I18N.es,{farm_q:"¿Cuántas hectáreas siembras? (opcional)",
  sc2:"🟡 Sigue hasta abril",sc2a:"No siembres tu lote bajo hasta que baje el agua. Usa «Se me inundó» para elegir el mes.",
  sc3:"🔴 Sigue hasta junio",sc3a:(a,b,m)=>`Como en 1983 y 1998 (en mayo llovieron ${a} y ${b} mm aquí; lo normal es ${m}). Guarda tu semilla y siembra el cultivo de verano desde junio.`,
  sc_note:"📊 Solo hubo 2 Niños extraordinarios en 45 años (1983 y 1998). Con tan pocos casos, esto es una guía, no una certeza. Revisa cada mes el aviso del ERFEN.",
- lot_haz:"🌊 ¿Dónde se inunda? (NASA)",lot_haz_off:"🌊 Ocultar inundación",
- lot_haz_leg:"Azul = zona que se inundó seguido (NASA, 1985–2003). Sin color = rara vez se inundó: ahí es más seguro sembrar.",
+ lot_haz:"🌊 ¿Dónde se encharca?",lot_haz_off:"🌊 Ocultar",lot_haz_wait:"Midiendo alturas…",
+ lot_haz_leg:"🔵 Azul = más bajo que el resto de esta zona: ahí se encharca primero. 🟢 Verde = más alto: más seguro para seguir sembrando aunque haya El Niño. Altura por satélite (Copernicus DEM, 90 m). Confírmalo en el campo.",
  lot_btn:"🗺️ Marcar mi lote en el mapa",lot_t:"Marca tu lote",lot_help:"Toca las esquinas de tu lote sobre la foto satelital. O camina por el borde con tu celular.",
  lot_me:"📍 Ir a donde estoy",lot_walk:"🚶 Caminar el borde (GPS)",lot_stop:"⏹️ Terminar caminata",lot_undo:"↩️ Deshacer",lot_clear:"🗑️ Empezar de nuevo",lot_ok:"✅ Listo",
  lot_area:ha=>`Área: ${ha} ha`,lot_need:"Marca al menos 3 esquinas.",lot_nogps:"No se pudo ver tu ubicación. Permite la ubicación o toca las esquinas.",
@@ -1074,10 +1074,16 @@ function lotOpen(){
     document.getElementById("lotOk").onclick=lotSave;
     document.getElementById("lotHaz").onclick=()=>{ const b=document.getElementById("lotHaz"), lg=document.getElementById("lotHazLeg");
       if(LOT.haz){LOT.map.removeLayer(LOT.haz);LOT.haz=null;b.textContent=T("lot_haz");lg.hidden=true;return;}
-      const hz=LAYERS.find(x=>x.id==="hazard");
-      LOT.haz=L.tileLayer(hz.url(),{maxNativeZoom:7,maxZoom:19,opacity:.6,attribution:"NASA SEDAC / GIBS"}).addTo(LOT.map);
-      if(LOT.map.getZoom()>12) LOT.map.setZoom(12);
-      b.textContent=T("lot_haz_off"); lg.textContent=T("lot_haz_leg"); lg.hidden=false; };
+      if(LOT.map.getZoom()>14) LOT.map.setZoom(14);
+      const bb=LOT.map.getBounds(), n=10, la0=bb.getSouth(), lo0=bb.getWest(), dla=(bb.getNorth()-la0)/n, dlo=(bb.getEast()-lo0)/n, cells=[];
+      for(let i=0;i<n;i++) for(let j=0;j<n;j++) cells.push([la0+(i+.5)*dla, lo0+(j+.5)*dlo]);
+      b.textContent=T("lot_haz_wait");
+      fetch(`https://api.open-meteo.com/v1/elevation?latitude=${cells.map(c=>c[0].toFixed(5)).join(",")}&longitude=${cells.map(c=>c[1].toFixed(5)).join(",")}`).then(r=>r.json()).then(j=>{
+        const e=j.elevation, med=median(e); LOT.haz=L.layerGroup();
+        cells.forEach((c,k)=>{const d=e[k]-med; if(Math.abs(d)<1.5) return;
+          L.rectangle([[c[0]-dla/2,c[1]-dlo/2],[c[0]+dla/2,c[1]+dlo/2]],{stroke:false,fillColor:d<0?"#1d4ed8":"#16a34a",fillOpacity:.38,interactive:false}).addTo(LOT.haz);});
+        LOT.haz.addTo(LOT.map); b.textContent=T("lot_haz_off"); lg.textContent=T("lot_haz_leg"); lg.hidden=false;
+      }).catch(()=>{b.textContent=T("lot_haz");}); };
   } else if(!LOT.pts.length){ LOT.map.setView(paddyPoint(STATE.site)||LOT.map.getCenter(),16); }
   setTimeout(()=>{LOT.map.invalidateSize(); if(LOT.pts.length>=3) LOT.map.fitBounds(LOT.pts,{padding:[30,30]}); lotDateShow();},150);
   lotDraw();
