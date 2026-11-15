@@ -162,6 +162,60 @@ footer h5{font:600 11px var(--mono);letter-spacing:.14em;color:var(--text);margi
 .navlearn{color:var(--text);text-decoration:none;font:600 13px var(--sans);border:1px solid var(--line2);border-radius:999px;padding:6px 12px;white-space:nowrap}
 .navlearn:hover{border-color:var(--cyan)}
 @media (max-width:1000px){.learn,.gloss{grid-template-columns:1fr}.navlearn{margin-left:auto}}
+.simple{display:grid;gap:16px}
+.step .ph h2{font-size:18px}
+.bigbtns{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.bigbtns.two{grid-template-columns:1fr 1fr}
+.bigbtn{background:var(--panel2);border:2px solid var(--line2);border-radius:16px;padding:16px;color:var(--text);font:700 18px var(--sans);cursor:pointer;text-align:left;transition:.15s}
+.bigbtn small{display:block;font:500 12.5px var(--sans);color:var(--muted);margin-top:5px}
+.bigbtn:hover{border-color:var(--cyan2)}
+.bigbtn.on{border-color:var(--cyan);background:rgba(34,211,238,.10);box-shadow:0 0 22px rgba(34,211,238,.15)}
+.ninorow{display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;border-radius:12px;border:1px solid rgba(251,191,36,.35);background:rgba(251,191,36,.06);cursor:pointer;user-select:none}
+.ninorow .sw{width:46px;height:26px;border-radius:99px;background:var(--line2);position:relative;flex:0 0 46px;transition:.2s}
+.ninorow .sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s}
+.ninorow.on .sw{background:var(--amber)}
+.ninorow.on .sw::after{left:23px}
+.ninorow span{font-size:14px;line-height:1.4}
+.result{border-radius:18px;padding:20px;border:1px solid var(--line2);background:var(--panel2)}
+.result.red{border-color:rgba(248,113,113,.6);background:linear-gradient(180deg,rgba(248,113,113,.10),var(--panel2))}
+.result.amber{border-color:rgba(251,191,36,.6);background:linear-gradient(180deg,rgba(251,191,36,.10),var(--panel2))}
+.result.green{border-color:rgba(74,222,128,.6);background:linear-gradient(180deg,rgba(74,222,128,.10),var(--panel2))}
+.light{display:flex;gap:16px;align-items:center}
+.light .dot{width:58px;height:58px;border-radius:50%;flex:0 0 58px;display:grid;place-items:center;font-size:26px}
+.red .dot{background:#ef4444;box-shadow:0 0 28px rgba(239,68,68,.7)}
+.amber .dot{background:#f59e0b;box-shadow:0 0 28px rgba(245,158,11,.7)}
+.green .dot{background:#22c55e;box-shadow:0 0 28px rgba(34,197,94,.7)}
+.light h3{margin:0;font-size:21px;line-height:1.25}
+.light p{margin:4px 0 0;color:var(--muted);font-size:14px;line-height:1.45}
+.todo{margin:16px 0 0;padding:0;list-style:none;display:grid;gap:8px}
+.todo li{display:flex;gap:10px;font-size:15px;line-height:1.45;background:rgba(5,8,15,.35);border-radius:12px;padding:10px 12px}
+.todo li b{color:var(--text)}
+.opts{display:grid;gap:8px;margin-top:16px}
+.optline{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:8px;align-items:center;background:rgba(5,8,15,.35);border-radius:12px;padding:10px 12px;font-size:14px}
+.optline.h{background:none;padding:0 12px;font:600 10.5px var(--mono);letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.optline b{font-size:14.5px}
+.tagr{font:700 12px var(--mono)}
+.tagr.r{color:var(--red)} .tagr.a{color:var(--amber)} .tagr.g{color:var(--green)}
+.months6{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.months6 button{background:var(--panel2);border:2px solid var(--line2);color:var(--text);border-radius:12px;padding:14px 0;font:700 15px var(--sans);cursor:pointer}
+.months6 button.on{background:var(--amber);color:#1a1000;border-color:var(--amber)}
+.fcards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.fcard{background:rgba(5,8,15,.35);border-radius:14px;padding:14px}
+.fcard h4{margin:0 0 6px;font-size:17px}
+.fcard .big{font:700 15px var(--sans);margin:4px 0}
+.insights{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.ins{border:1px solid var(--line2);border-radius:14px;padding:14px;background:var(--panel2);display:flex;flex-direction:column;gap:6px}
+.ins .num{font:700 30px var(--mono);letter-spacing:-.02em}
+.ins p{margin:0;font-size:13.5px;line-height:1.5;color:#c7d2e8}
+.ins .src{font-size:11px;color:var(--dim);margin-top:auto}
+.ins .src a{color:var(--muted)}
+.mcbox{margin-top:14px;border:1px dashed var(--line2);border-radius:14px;padding:14px;display:grid;grid-template-columns:1fr 2fr;gap:16px;align-items:center}
+.mcbar{height:16px;border-radius:99px;background:var(--bare);overflow:hidden;margin:8px 0}
+.mcbar b{display:block;height:100%;background:linear-gradient(90deg,var(--amber),var(--red))}
+.protoggle{width:100%;background:none;border:1px dashed var(--cyan2);color:var(--cyan);border-radius:14px;padding:16px;font:700 16px var(--sans);cursor:pointer;margin:6px 0}
+.protoggle:hover{background:rgba(34,211,238,.06)}
+#pro .prohead{font:600 11px var(--mono);letter-spacing:.16em;color:var(--muted);text-transform:uppercase;margin:6px 0 10px}
+@media (max-width:1000px){.bigbtns{grid-template-columns:1fr 1fr}.insights,.fcards{grid-template-columns:1fr}.mcbox{grid-template-columns:1fr}.optline{grid-template-columns:1.3fr 1fr 1fr 1fr;font-size:12.5px}.months6{grid-template-columns:repeat(3,1fr)}}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--cyan);color:#001018;padding:10px 16px;border-radius:10px;font-weight:700;opacity:0;transition:.3s;pointer-events:none;z-index:2000}
 .toast.on{opacity:1}
 @media (max-width:1000px){
@@ -199,6 +253,34 @@ footer h5{font:600 11px var(--mono);letter-spacing:.14em;color:var(--text);margi
     <div class="alert"><span class="pulse"></span><div data-i18n-html="alert"><b>El Niño 2026–27 watch.</b> Ecuador's ERFEN committee (6 Nov 2026) expects a strong El Niño, with the main impact on the coast between November 2026 and March 2027 — the same months rice is sown. Use the “wetter than normal” scenario below to stress-test your plan.</div></div>
   </div>
 
+  <div class="simple" id="simple">
+    <section class="panel step">
+      <div class="ph"><span class="n">1</span><h2 data-i18n="s_q1">Where is your farm?</h2></div>
+      <div class="pb"><div class="bigbtns" id="sZones"></div></div>
+    </section>
+    <section class="panel step">
+      <div class="ph"><span class="n">2</span><h2 data-i18n="s_q2">What do you need?</h2></div>
+      <div class="pb">
+        <div class="bigbtns two" id="sNeed"></div>
+        <div class="ninorow" id="sNino"><div class="sw"></div><span id="sNinoTxt"></span></div>
+      </div>
+    </section>
+    <section class="panel step">
+      <div class="ph"><span class="n">3</span><h2 data-i18n="s_q3">What to do</h2><span class="tag" data-i18n="s_q3tag">Options to confirm with a local technician</span></div>
+      <div class="pb" id="sResult"></div>
+    </section>
+    <section class="panel">
+      <div class="ph"><span class="n">★</span><h2 data-i18n="s_ins">What NASA data revealed</h2><span class="tag">NASA POWER · 1981–2025</span></div>
+      <div class="pb">
+        <div class="insights" id="insights"></div>
+        <div class="mcbox" id="mcbox"></div>
+      </div>
+    </section>
+    <button class="protoggle" id="proBtn"></button>
+  </div>
+
+  <div id="pro" hidden>
+  <div class="prohead" data-i18n="s_prohead">Full analysis — for technicians and judges</div>
   <div class="grid g-main">
     <div class="panel">
       <div class="ph"><span class="n">01</span><h2 data-i18n="p1">Your farm</h2></div>
@@ -272,6 +354,8 @@ footer h5{font:600 11px var(--mono);letter-spacing:.14em;color:var(--text);margi
       <div class="small" style="margin-top:8px" id="ndviNote"></div>
     </div>
   </section>
+
+  </div>
 
   <section class="panel" id="learn">
     <div class="ph"><span class="n">07</span><h2 data-i18n="p_learn">Learn in 2 minutes</h2><span class="tag" data-i18n="p_learn_tag">Tap 🔊 to listen</span></div>
@@ -406,6 +490,60 @@ const I18N = {
   wa_head:"🌾 SafeSow · plan de arroz con datos de la NASA",wa_zone:"Zona",wa_scen:"Escenario",wa_norm:"clima normal",wa_wet:m=>`más lluvioso que lo normal (×${m}, escenario)`,
   wa_s:"Estrategias (riego en verano · lluvia sobre el cultivo ene–abr)",wa_flood:m=>`Si el agua bajó en ${m}:`,wa_foot:"Opciones para revisar con un técnico local, no son instrucciones."}
 };
+Object.assign(I18N.en,{s_q1:"Where is your farm?",s_q2:"What do you need?",s_q3:"What to do",s_q3tag:"Options to confirm with a local technician",s_ins:"What NASA data revealed",s_prohead:"Full analysis — for technicians and judges",
+ s_plan:"🌱 I'm going to sow",s_plan_s:"Plan the next season",s_flood:"🌊 My field flooded",s_flood_s:"What can I still sow?",
+ s_nino:"<b>Extraordinary El Niño scenario</b> (like 1982–83 and 1997–98) — ERFEN warns of a comparable event. Tap to switch off.",s_nonino:"<b>Normal year</b> — tap to simulate a strong El Niño (like 1997–98).",
+ s_risk:{red:"HIGH",amber:"MEDIUM",green:"LOW"},
+ s_title:(z,l)=>`Wet-season rice (Jan–Apr) in ${z}: ${l} flood risk`,
+ s_mc:(p)=>`In 1,000 simulated wet seasons built from 45 years of NASA rain data, <b>${p}%</b> were very wet (1.5× normal or more).`,
+ s_do:"What to do",
+ s_red1:"<b>Low plot that floods:</b> do not sow rice from November to April. Keep a water-tolerant cover and sow rice in June with irrigation (S2).",
+ s_red2:(p,l)=>`<b>High plot that does not flood:</b> rice in the wet season, then soybean in the dry season (S1): about ${p}% less irrigation water (${l} million litres less per hectare).`,
+ s_red3:(nd,n0)=>`<b>Clean your drains before December:</b> in Nov–Dec 1997 it rained ${nd} mm here; a normal year brings ${n0} mm.`,
+ s_red4:(my,m0)=>`<b>Wait until June for dry-season crops:</b> in May 1998 it still rained ${my} mm (normal: ${m0} mm).`,
+ s_g1:"<b>Wet-season rice is possible.</b> On low plots, keep drains clean and watch INAMHI warnings.",
+ s_g2:(p,l)=>`<b>In the dry season, sow soybean instead of rice (S1):</b> about ${p}% less irrigation water (${l} million litres less per hectare) and it breaks rice-after-rice.`,
+ s_g3:"<b>If your field floods,</b> tap “My field flooded” above.",
+ s_opts:"The 3 options",s_col_opt:"Option",s_col_w:"Dry-season water",s_col_r:"Flood risk",s_col_s:"Soil",
+ s_S0:"S0 · Rice + rice (today)",s_S1:"S1 · Rice → soybean",s_S2:"S2 · Cover → rice in June",
+ s_soil0:"—",s_soil1:"🌱 legume",s_soil2:"🌱 covered",
+ s_when:"When did the water go down?",s_sow:m=>`Sow around ${m}`,s_sow_s:"Before sowing: drain the field and wait until you can walk without sinking.",
+ s_harv:m=>`Harvest ≈ ${m}`,s_lit:(mm,l)=>`${mm} mm of extra water ≈ ${l} million litres per hectare`,
+ s_late:(my)=>`With El Niño the rain can last into May (May 1998: ${my} mm here). Soybean sown before June risks waterlogging.`,
+ s_i1:(nd,x)=>`fell in Nov–Dec 1997. A normal year: ${x}. El Niño rain does not wait for January.`,
+ s_i2:(x)=>`fell in Jan–Apr 1998 — ${x}× a normal wet season.`,
+ s_i3:(m0)=>`fell in May 1998 (normal: ${m0} mm). The dry season arrives late: do not sow dry-season crops before June.`,
+ s_i4:"hectares of rice exposed to flooding in Guayas. Salitre, Daule and Santa Lucía hold 64% of the 161,357 ha at risk.",
+ s_mct:"Monte Carlo simulation",s_mcs:"1,000 wet seasons resampled from 45 years (1981–2025) of NASA POWER rain, with random variation. Chance that Jan–Apr rain is 1.5× normal or more:",
+ s_mcl:"Not every strong El Niño floods the coast: only 3 of the 7 strong events since 1982 brought a very wet season here. ERFEN warns this one could be comparable to 1982–83 and 1997–98.",s_mcl_n:"Any year",s_mcl_s:"Any strong El Niño (7 events since 1982, NOAA)",s_mcl_x:"Extraordinary El Niño (like 1983 and 1998)",
+ s_pro_show:"🔬 See the full analysis (live satellite map, charts, 3 strategies, sources)",s_pro_hide:"▲ Hide the full analysis"});
+Object.assign(I18N.es,{s_q1:"¿Dónde está tu finca?",s_q2:"¿Qué necesitas?",s_q3:"Qué hacer",s_q3tag:"Opciones para confirmar con un técnico local",s_ins:"Lo que descubrimos con datos de la NASA",s_prohead:"Análisis completo — para técnicos y jueces",
+ s_plan:"🌱 Voy a sembrar",s_plan_s:"Planear la próxima temporada",s_flood:"🌊 Se me inundó",s_flood_s:"¿Qué puedo sembrar todavía?",
+ s_nino:"<b>Escenario El Niño extraordinario</b> (como 1982–83 y 1997–98) — el ERFEN advierte un evento comparable. Toca para apagarlo.",s_nonino:"<b>Año normal</b> — toca para simular un El Niño fuerte (como 1997–98).",
+ s_risk:{red:"ALTO",amber:"MEDIO",green:"BAJO"},
+ s_title:(z,l)=>`Arroz de invierno (ene–abr) en ${z}: riesgo ${l} de inundación`,
+ s_mc:(p)=>`En 1.000 inviernos simulados con 45 años de lluvia de la NASA, <b>${p}%</b> fueron muy lluviosos (1,5 veces lo normal o más).`,
+ s_do:"Qué hacer",
+ s_red1:"<b>Lote bajo que se inunda:</b> no siembres arroz de noviembre a abril. Deja una cobertura que aguante agua y siembra arroz en junio con riego (S2).",
+ s_red2:(p,l)=>`<b>Lote alto que no se inunda:</b> arroz en invierno y soya en verano (S1): cerca de ${p}% menos agua de riego (${l} millones de litros menos por hectárea).`,
+ s_red3:(nd,n0)=>`<b>Limpia tus drenajes antes de diciembre:</b> en nov–dic de 1997 llovieron ${nd} mm aquí; un año normal trae ${n0} mm.`,
+ s_red4:(my,m0)=>`<b>Espera a junio para el cultivo de verano:</b> en mayo de 1998 todavía llovieron ${my} mm (lo normal: ${m0} mm).`,
+ s_g1:"<b>El arroz de invierno es posible.</b> En lotes bajos, mantén los drenajes limpios y sigue las alertas del INAMHI.",
+ s_g2:(p,l)=>`<b>En verano, siembra soya en vez de arroz (S1):</b> cerca de ${p}% menos agua de riego (${l} millones de litros menos por hectárea) y cortas el arroz tras arroz.`,
+ s_g3:"<b>Si se te inunda,</b> toca “Se me inundó” arriba.",
+ s_opts:"Las 3 opciones",s_col_opt:"Opción",s_col_w:"Agua en verano",s_col_r:"Riesgo de inundación",s_col_s:"Suelo",
+ s_S0:"S0 · Arroz + arroz (hoy)",s_S1:"S1 · Arroz → soya",s_S2:"S2 · Cobertura → arroz en junio",
+ s_soil0:"—",s_soil1:"🌱 leguminosa",s_soil2:"🌱 cubierto",
+ s_when:"¿Cuándo bajó el agua?",s_sow:m=>`Siembra cerca de ${m}`,s_sow_s:"Antes de sembrar: drena el lote y espera a poder caminar sin hundirte.",
+ s_harv:m=>`Cosecha ≈ ${m}`,s_lit:(mm,l)=>`${mm} mm de agua extra ≈ ${l} millones de litros por hectárea`,
+ s_late:(my)=>`Con El Niño la lluvia puede seguir hasta mayo (mayo de 1998: ${my} mm aquí). Si siembras soya antes de junio, hay riesgo de encharcamiento.`,
+ s_i1:(nd,x)=>`llovieron en nov–dic de 1997. Un año normal: ${x}. La lluvia de El Niño no espera a enero.`,
+ s_i2:(x)=>`llovieron en ene–abr de 1998: ${x} veces un invierno normal.`,
+ s_i3:(m0)=>`llovieron en mayo de 1998 (lo normal: ${m0} mm). El verano llega tarde: no siembres el cultivo de verano antes de junio.`,
+ s_i4:"hectáreas de arroz expuestas a inundación en Guayas. Salitre, Daule y Santa Lucía concentran el 64% de las 161.357 ha en riesgo.",
+ s_mct:"Simulación Monte Carlo",s_mcs:"1.000 inviernos re-muestreados de 45 años (1981–2025) de lluvia NASA POWER, con variación aleatoria. Probabilidad de que la lluvia de ene–abr sea 1,5 veces lo normal o más:",
+ s_mcl:"No todo El Niño fuerte inunda la Costa: solo 3 de los 7 eventos fuertes desde 1982 trajeron un invierno muy lluvioso aquí. El ERFEN advierte que este podría ser comparable a 1982–83 y 1997–98.",s_mcl_n:"Cualquier año",s_mcl_s:"Cualquier El Niño fuerte (7 eventos desde 1982, NOAA)",s_mcl_x:"El Niño extraordinario (como 1983 y 1998)",
+ s_pro_show:"🔬 Ver el análisis completo (mapa satelital en vivo, gráficos, 3 estrategias, fuentes)",s_pro_hide:"▲ Ocultar el análisis completo"});
 let LANG = "en";
 const T = (k,...a)=>{const v=(I18N[LANG][k]??I18N.en[k]??k);return typeof v==="function"?v(...a):v};
 const M = i=>MONTHS[LANG][i-1];
@@ -603,6 +741,88 @@ function renderLearn(){
   document.getElementById("gloss").innerHTML=GLOSS.map(g=>`<div class="gterm"><b>${g.w}</b><p>${g[LANG]}</p></div>`).join("");
 }
 
+const YEARS0=1981;
+const HIST={
+ daule:{ja:[706,301,1244,716,310,639,1502,502,1136,433,468,1198,843,589,666,494,1061,2432,1027,754,1028,1205,664,629,140,462,120,1128,503,603,530,1190,765,366,531,765,1237,516,610,543,751,651,983,531,1141],
+  may:[3,29,387,20,22,7,58,41,16,18,27,202,54,27,18,5,95,406,53,122,23,26,29,46,3,8,1,34,1,3,3,81,15,73,128,13,163,42,49,14,52,22,66,30,25],
+  nd:[39,448,80,70,49,80,34,39,14,54,54,24,72,109,23,22,918,64,61,18,20,47,44,13,15,5,38,3,14,108,13,15,10,8,43,12,32,71,59,58,90,10,72,84,19]},
+ babahoyo:{ja:[689,455,1117,827,424,762,1440,702,1133,557,615,1253,1062,801,645,642,1042,2045,1060,769,834,1031,649,646,160,499,129,1007,509,606,605,1134,717,392,560,737,1082,553,655,557,765,639,821,467,1027],
+  may:[21,46,346,40,59,32,99,92,42,46,51,259,75,57,50,34,112,387,97,142,50,63,61,83,8,28,8,85,3,12,27,102,54,86,144,39,183,75,87,58,81,53,99,78,73],
+  nd:[93,537,144,112,104,124,62,92,46,97,105,68,135,171,83,61,872,136,126,37,77,112,101,74,47,14,104,18,54,147,79,63,54,44,95,57,97,125,126,109,152,60,139,139,88]}
+};
+const SS={need:"plan",nino:true,proShown:false,globeDone:false};
+const cellOf=s=>s==="babahoyo"?"babahoyo":"daule";
+const median=a=>{const b=[...a].sort((x,y)=>x-y),n=b.length;return n%2?b[(n-1)/2]:(b[n/2-1]+b[n/2])/2;};
+const yr=(h,k,y)=>h[k][y-YEARS0];
+const fmt=n=>Math.round(n).toLocaleString(LANG==="es"?"es-EC":"en-US");
+const fmt1=n=>n.toLocaleString(LANG==="es"?"es-EC":"en-US",{minimumFractionDigits:1,maximumFractionDigits:1});
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const STRONG=[1983,1988,1992,1998,2010,2016,2024], EXTRA=[1983,1998];
+function monteCarlo(site,mode){
+  const h=HIST[cellOf(site)],m=median(h.ja),r=rng(2026),N=1000;
+  const pool=mode==="extra"?EXTRA:mode==="strong"?STRONG:null;
+  let wet=0;
+  for(let i=0;i<N;i++){
+    const y=pool?pool[Math.floor(r()*pool.length)]:YEARS0+Math.floor(r()*h.ja.length);
+    const u1=r()||1e-9,u2=r(),g=Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);
+    if(yr(h,"ja",y)*Math.exp(0.1*g)>=1.5*m) wet++;
+  }
+  return {p:Math.round(wet/N*100),m};
+}
+function drops(mm){return mm<300?"💧":mm<600?"💧💧":"💧💧💧";}
+function renderSimple(){
+  if(!STATE.site) return;
+  const site=DATA.sites.find(x=>x.site_id===STATE.site), zn=site.site_name.split(",")[0];
+  document.getElementById("sZones").innerHTML=DATA.sites.map(s=>`<button class="bigbtn ${s.site_id===STATE.site?"on":""}" data-s="${s.site_id}">📍 ${s.site_name.split(",")[0]}<small>${(s.site_name.split(",")[1]||"").trim()}</small></button>`).join("");
+  document.querySelectorAll("#sZones .bigbtn").forEach(b=>b.onclick=()=>selectSite(b.dataset.s));
+  document.getElementById("sNeed").innerHTML=[["plan","s_plan","s_plan_s"],["flood","s_flood","s_flood_s"]].map(([k,a,b])=>`<button class="bigbtn ${SS.need===k?"on":""}" data-k="${k}">${T(a)}<small>${T(b)}</small></button>`).join("");
+  document.querySelectorAll("#sNeed .bigbtn").forEach(b=>b.onclick=()=>{SS.need=b.dataset.k;renderSimple();});
+  const nr=document.getElementById("sNino"); nr.classList.toggle("on",SS.nino); document.getElementById("sNinoTxt").innerHTML=T(SS.nino?"s_nino":"s_nonino");
+  nr.onclick=()=>{SS.nino=!SS.nino;renderSimple();};
+  const h=HIST[cellOf(STATE.site)], mc=monteCarlo(STATE.site,SS.nino?"extra":"normal");
+  const ndMed=median(h.nd), mayMed=median(h.may), jaMed=median(h.ja);
+  const clim=climFor(STATE.site), res=STRATS.map(st=>({st,...evaluate(st,clim,1)}));
+  const save=res[0].irr?Math.round((res[0].irr-res[1].irr)/res[0].irr*100):0, litres=fmt1((res[0].irr-res[1].irr)/100);
+  const box=document.getElementById("sResult");
+  if(SS.need==="plan"){
+    const lvl=mc.p>=60?"red":mc.p>=20?"amber":"green", lab=T("s_risk")[lvl];
+    const todo=lvl==="green"||lvl==="amber"&&!SS.nino?[T("s_g1"),T("s_g2",save,litres),T("s_g3")]:[T("s_red1"),T("s_red2",save,litres),T("s_red3",fmt(yr(h,"nd",1997)),fmt(ndMed)),T("s_red4",fmt(yr(h,"may",1998)),fmt(mayMed))];
+    const rk=(id)=>id==="S2"?["g",T("s_risk").green]:lvl==="red"?["r",T("s_risk").red]:lvl==="amber"?["a",T("s_risk").amber]:["g",T("s_risk").green];
+    box.innerHTML=`<div class="result ${lvl}"><div class="light"><div class="dot">${lvl==="red"?"!":lvl==="amber"?"~":"✓"}</div><div><h3>${T("s_title",zn,lab)}</h3><p>${T("s_mc",mc.p)}</p></div></div>
+      <div class="lbl" style="margin-top:16px">${T("s_do")}</div><ul class="todo">${todo.map((t,i)=>`<li><span>${["1️⃣","2️⃣","3️⃣","4️⃣"][i]}</span><span>${t}</span></li>`).join("")}</ul>
+      <div class="lbl" style="margin-top:16px">${T("s_opts")}</div>
+      <div class="opts"><div class="optline h"><span>${T("s_col_opt")}</span><span>${T("s_col_w")}</span><span>${T("s_col_r")}</span><span>${T("s_col_s")}</span></div>
+      ${res.map((r,i)=>{const [c,l]=rk(r.st.id);return `<div class="optline"><b>${T("s_"+r.st.id)}</b><span>${drops(r.irr)} <span class="small mono">${r.irr} mm</span></span><span class="tagr ${c}">${l}</span><span>${T("s_soil"+i)}</span></div>`}).join("")}</div></div>`;
+  } else {
+    const fo=floodOptions(clim), p=fo[0].p;
+    const warn=SS.nino&&p<=5?`<li><span>⚠️</span><span>${T("s_late",fmt(yr(h,"may",1998)))}</span></li>`:"";
+    box.innerHTML=`<div class="lbl">${T("s_when")}</div><div class="months6">${[1,2,3,4,5,6].map(m=>`<button class="${m===STATE.rec?"on":""}" data-m="${m}">${M(m)}</button>`).join("")}</div>
+      <div class="result amber" style="margin-top:14px"><div class="light"><div class="dot">🌱</div><div><h3>${T("s_sow",M(p))}</h3><p>${T("s_sow_s")}</p></div></div>
+      <ul class="todo">${warn}</ul>
+      <div class="fcards">${fo.map(o=>`<div class="fcard"><h4>${o.c==="rice"?"🌾":"🫘"} ${T(o.c)}</h4><div class="big">${T("s_harv",M(o.harvest))}</div><div class="small">${drops(o.need)} ${T("s_lit",o.need,fmt1(o.need/100))}</div><div class="flags">${o.flags.map(([i,t])=>`<div class="flag"><span>${i}</span><span>${t}</span></div>`).join("")}</div></div>`).join("")}</div></div>`;
+    box.querySelectorAll(".months6 button").forEach(b=>b.onclick=()=>{STATE.rec=+b.dataset.m;renderAll();});
+  }
+  document.getElementById("insights").innerHTML=[
+    [fmt(yr(h,"nd",1997))+" mm","c-red",T("s_i1",fmt(yr(h,"nd",1997)),fmt(ndMed)+" mm"),"NASA POWER (PRECTOTCORR, monthly)","https://power.larc.nasa.gov/"],
+    [fmt(yr(h,"ja",1998))+" mm","c-amber",T("s_i2",fmt1(yr(h,"ja",1998)/jaMed)),"NASA POWER (PRECTOTCORR, monthly)","https://power.larc.nasa.gov/"],
+    [fmt(yr(h,"may",1998))+" mm","c-cyan",T("s_i3",fmt(mayMed)),"NASA POWER (PRECTOTCORR, monthly)","https://power.larc.nasa.gov/"],
+    [fmt(129449),"c-violet",T("s_i4"),"Prefectura del Guayas via Primicias (2026)","https://www.primicias.ec/economia/fenomeno-nino-cultivos-guayas-riesgo-agricola-camaras-135130/"]
+  ].map(([n,c,t,s,u])=>`<div class="ins"><div class="num ${c}">${n}</div><p>${t}</p><div class="src">${T("source")}: <a href="${u}" target="_blank" rel="noopener">${s}</a></div></div>`).join("");
+  const bars=[["normal","s_mcl_n"],["strong","s_mcl_s"],["extra","s_mcl_x"]].map(([k,l])=>{const q=monteCarlo(STATE.site,k).p;return `<div class="small">${T(l)}: <b class="mono">${q}%</b></div><div class="mcbar"><b style="width:${Math.max(q,2)}%"></b></div>`;}).join("");
+  document.getElementById("mcbox").innerHTML=`<div><div class="lbl">🎲 ${T("s_mct")}</div><div class="small">${T("s_mcs")}</div><div class="small" style="margin-top:8px">${T("s_mcl")}</div><div class="src small" style="margin-top:8px">${T("source")}: <a href="https://power.larc.nasa.gov/" target="_blank" rel="noopener">NASA POWER</a> · <a href="https://origin.cpc.ncep.noaa.gov/products/analysis_monitoring/ensostuff/ONI_v5.php" target="_blank" rel="noopener">NOAA ONI</a> · <a href="https://www.primicias.ec/sociedad/fenomeno-elnino-ecuador-informe-erfen-intensidad-efectos-pronosticos-lluvias-136596/" target="_blank" rel="noopener">ERFEN (Primicias)</a></div></div><div>${bars}</div>`;
+  const pb=document.getElementById("proBtn"); pb.textContent=T(SS.proShown?"s_pro_hide":"s_pro_show");
+}
+function togglePro(){
+  SS.proShown=!SS.proShown; const pro=document.getElementById("pro"); pro.hidden=!SS.proShown; renderSimple();
+  if(!SS.proShown) return;
+  setTimeout(()=>{
+    if(climChart) climChart.resize(); if(ndviChart) ndviChart.resize();
+    if(map){map.invalidateSize(); const s=DATA.sites.find(x=>x.site_id===STATE.site);
+      if(!SS.globeDone){SS.globeDone=true; map.setView([5,-60],3,{animate:false}); setTimeout(()=>map.flyTo([s.lat,s.lon],10,{duration:3.5}),500);} else map.setView([s.lat,s.lon],10);}
+    pro.scrollIntoView({behavior:"smooth",block:"start"});
+  },120);
+}
+
 let climChart, ndviChart;
 Chart.defaults.color="#8a9bbd"; Chart.defaults.font.family="'Space Grotesk',system-ui"; Chart.defaults.borderColor="rgba(42,60,102,.45)";
 
@@ -616,7 +836,7 @@ function renderZones(){
 function selectSite(id){
   STATE.site=id; renderZones();
   Object.keys(pins).forEach(k=>document.getElementById("pin-"+k)?.classList.toggle("on",k===id));
-  const s=DATA.sites.find(x=>x.site_id===id); if(map){map.invalidateSize(); map.setView([s.lat,s.lon],10,{animate:true});}
+  const s=DATA.sites.find(x=>x.site_id===id); if(map&&SS.proShown){map.invalidateSize(); map.setView([s.lat,s.lon],10,{animate:true});}
   renderAll();
 }
 function renderAll(){
@@ -624,7 +844,7 @@ function renderAll(){
   const shared = ["daule","salitre","samborondon"].includes(STATE.site);
   document.getElementById("zoneMeta").innerHTML = T("meta",(+s.lat).toFixed(2),(+s.lon).toFixed(2),s.cell_elev_m) + (shared?`<br><br>ⓘ ${T("shared_cell")}`:"");
   const res = STRATS.map(st=>({st,...evaluate(st,clim,STATE.mult)}));
-  renderKpis(clim,res); renderClim(clim,s); renderStrats(res); renderFlood(clim); renderNdvi(); renderLearn(); updateShare(res,clim);
+  renderKpis(clim,res); renderClim(clim,s); renderStrats(res); renderFlood(clim); renderNdvi(); renderLearn(); renderSimple(); updateShare(res,clim);
 }
 function renderKpis(clim,res){
   const rain=byMonth(clim,"rain_mm");
@@ -759,7 +979,7 @@ function applyLang(){
   document.getElementById("chipNdvi").classList.add(ndvi?"ok":"warn");
   if(!DATA.sites.length){document.querySelector(".hero").insertAdjacentHTML("beforeend",'<div class="alert">Data could not be loaded.</div>');return;}
   STATE.site=DATA.sites[0].site_id;
-  initMap(); renderZones(); selectSite(STATE.site);
+  initMap(); renderZones(); document.getElementById("proBtn").onclick=togglePro; selectSite(STATE.site);
   setTimeout(()=>{map.invalidateSize();const s0=DATA.sites.find(x=>x.site_id===STATE.site);map.setView([s0.lat,s0.lon],10);},400);
   document.querySelectorAll(".lang button").forEach(b=>b.onclick=()=>{LANG=b.dataset.lang;applyLang();});
   document.querySelectorAll("#scen button").forEach(b=>b.onclick=()=>{
