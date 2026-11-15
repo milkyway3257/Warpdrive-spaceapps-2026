@@ -6,7 +6,7 @@
 <title>SafeSow · Flood-aware rice planner · NASA Space Apps 2026</title>
 <meta name="description" content="Flood-aware crop rotation planner for smallholder rice farmers in Guayas and Los Ríos, Ecuador, built on NASA POWER, MODIS and GIBS data.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@700;800;900&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js"></script>
@@ -237,6 +237,100 @@ footer h5{font:600 11px var(--mono);letter-spacing:.14em;color:var(--text);margi
   #map{height:380px}
   .chips{display:none}
 }
+
+/* ===== Field layer (farmer) ===== */
+:root{
+  --paper:#EDF2E7; --ink:#13241A; --paddy:#2E6B30; --sprout:#8DC63F; --mud:#8A6A3E; --gauge:#C4301C;
+  --bg:#EDF2E7; --bg2:#E3EBDC; --panel:#FFFFFF; --panel2:#F5F8F1; --line:#CFDBC9; --line2:#B3C4AC;
+  --text:#13241A; --muted:#4D6255; --dim:#7A8D80;
+  --cyan:#2E6B30; --cyan2:#245626; --green:#2E6B30; --amber:#A86A12; --red:#C4301C; --violet:#5B4B8A; --blue:#2F6690;
+  --sans:'Atkinson Hyperlegible',system-ui,sans-serif; --display:'Big Shoulders Display','Atkinson Hyperlegible',sans-serif;
+}
+body{background:var(--paper);overflow-x:clip}
+body::before{display:none}
+.top{background:rgba(237,242,231,.94);border-bottom:1px solid var(--line)}
+.logo{font-family:var(--display);font-size:24px;letter-spacing:.02em;font-weight:800}
+.logo .mark{border-color:var(--paddy);box-shadow:none;background:var(--paddy)}
+.logo .mark svg{stroke:#fff}
+.logo .mark svg circle{fill:var(--sprout)}
+.logo small{font-family:var(--sans);letter-spacing:.02em;font-size:11px;text-transform:none}
+.navlearn{border-color:var(--line2);color:var(--ink);font-family:var(--sans);font-weight:700}
+.lang{border-color:var(--line2)}
+.lang button{color:var(--muted);font-family:var(--sans)}
+.lang button.on{background:var(--ink);color:#fff}
+.heroband{position:relative;height:300px;background:#2b3a2a;overflow:hidden}
+#heroMap{position:absolute;inset:0;background:#3a4a35}
+#heroMap .leaflet-control-attribution{background:rgba(19,36,26,.6)!important;color:#dfe8da!important}
+.herocap{position:absolute;right:20px;top:16px;z-index:600;color:#fff;font:700 13px var(--sans);background:rgba(19,36,26,.62);padding:6px 10px;border-radius:6px}
+.hero{position:relative;z-index:700;margin-top:-118px;padding:0 0 8px}
+.hero h1{display:inline-block;background:var(--ink);color:#fff;font:900 clamp(34px,5vw,60px)/.95 var(--display);letter-spacing:.005em;text-transform:uppercase;padding:20px 26px 18px;margin:0;max-width:820px}
+.hero h1 em{background:none;-webkit-background-clip:initial;background-clip:initial;color:inherit;font-style:normal}
+.lede{color:var(--muted);font-size:18px;margin-top:14px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.panel::after{display:none}
+.step{border:0;background:transparent}
+.step .ph{padding:6px 0 0}
+.step .pb{padding:12px 0 6px}
+.step .ph .n{background:none;color:var(--paddy);font:900 30px/1 var(--display);padding:0}
+.step .ph h2{font:800 28px/1.05 var(--display);text-transform:uppercase;letter-spacing:.01em}
+.bigbtn{background:#fff;border:2px solid var(--line2);border-radius:8px;font:700 19px var(--sans);color:var(--ink)}
+.bigbtn small{color:var(--muted);font-family:var(--sans)}
+.bigbtn:hover{border-color:var(--paddy)}
+.bigbtn.on{background:var(--paddy);border-color:var(--paddy);color:#fff;box-shadow:none}
+.bigbtn.on small{color:#d9ecd0}
+.ninorow{background:#FFF4DC;border-color:#E2C27A;border-radius:8px;color:var(--ink)}
+.ninorow.on .sw{background:var(--gauge)}
+.result{background:#fff;border:2px solid var(--line2);border-radius:10px;padding:22px}
+.result.red{border-color:var(--gauge);background:#fff}
+.result.amber{border-color:#D39B3A;background:#fff}
+.result.green{border-color:var(--paddy);background:#fff}
+.light{align-items:stretch;gap:22px}
+.light h3{font:800 30px/1.05 var(--display);text-transform:uppercase;color:var(--ink)}
+.light p{color:var(--muted);font-size:15px}
+.gauge{position:relative;width:74px;flex:0 0 74px;height:150px;background:#E7EEF0;border:2px solid var(--ink);border-radius:4px;overflow:hidden}
+.gauge .water{position:absolute;left:0;right:0;bottom:0;height:var(--lvl);background:linear-gradient(#8A6A3E,#6E5230);opacity:.92;transition:height .9s ease}
+.gauge .staff{position:absolute;left:6px;top:0;bottom:0;width:14px;background:repeating-linear-gradient(to top,#fff 0 10px,var(--gauge) 10px 20px);border-right:1px solid rgba(0,0,0,.25)}
+.gauge b{position:absolute;right:5px;top:5px;font:900 21px var(--display);color:var(--ink);background:rgba(255,255,255,.88);padding:0 4px;border-radius:3px}
+.bigmonth{width:96px;flex:0 0 96px;background:var(--paddy);color:#fff;border-radius:6px;display:grid;place-items:center;font:900 34px var(--display);text-transform:uppercase;padding:16px 0}
+.todo li{background:var(--panel2);border-left:4px solid var(--sprout);border-radius:4px;font-size:17px;color:var(--ink)}
+.result.red .todo li{border-left-color:var(--gauge)}
+.keyfact{color:var(--muted)}
+.keyfact b{color:var(--ink)}
+.optline{background:var(--panel2)}
+.optline.h{color:var(--muted);font-family:var(--sans);letter-spacing:0;text-transform:none;font-size:12px}
+summary{color:var(--paddy);font-family:var(--sans);font-size:14px}
+.months6 button{background:#fff;border-color:var(--line2);color:var(--ink);font-family:var(--sans);border-radius:8px}
+.months6 button.on{background:var(--paddy);border-color:var(--paddy);color:#fff}
+.fcard{background:var(--panel2);border-radius:8px}
+.fcard h4{font:800 22px var(--display);text-transform:uppercase}
+.flag{color:var(--ink)}
+.protoggle{border:2px solid var(--ink);color:var(--ink);background:#fff;border-radius:8px;font:700 17px var(--sans)}
+.protoggle:hover{background:var(--ink);color:#fff}
+#learnBtn{background:var(--paddy);border-color:var(--paddy);color:#fff}
+.lcard{background:var(--panel2);border-color:var(--line);border-radius:8px}
+.lcard h3{font:800 22px/1.05 var(--display);text-transform:uppercase}
+.lcard p,.gterm p,details p{color:var(--muted)}
+.listen{background:#fff;border-color:var(--paddy);color:var(--paddy);font-family:var(--sans)}
+.gterm{border-color:var(--line2)}
+.gterm b{color:var(--paddy);font-family:var(--display);font-size:22px}
+.ph .n{background:var(--paddy);color:#fff;font-family:var(--sans)}
+.ph h2{font-family:var(--sans)}
+.ph .tag{font-family:var(--sans);letter-spacing:0;color:var(--dim)}
+.lbl{font-family:var(--sans);letter-spacing:0;text-transform:none;font-size:13px}
+footer{border-top:1px solid var(--line);color:var(--muted)}
+footer h5{font-family:var(--sans);letter-spacing:0;text-transform:none;font-size:14px;color:var(--ink)}
+.btn.wa{font-family:var(--sans)}
+:focus-visible{outline:3px solid var(--sprout);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.gauge .water{transition:none}}
+/* ===== Orbit layer (full analysis) ===== */
+#pro{--bg:#0E1A14;--bg2:#0B150F;--panel:#13221A;--panel2:#182A20;--line:#24382C;--line2:#335040;--text:#E8F0E6;--muted:#A3B7A9;--dim:#6E8577;--cyan:#8DC63F;--cyan2:#6FA22F;--green:#8DC63F;--amber:#E0A84A;--red:#F07A66;
+  background:var(--bg);color:var(--text);margin:18px calc(50% - 50vw) 0;padding:26px max(20px,calc(50vw - 640px)) 30px}
+#pro .prohead{color:var(--muted);font:800 26px var(--display);letter-spacing:.01em;text-transform:uppercase}
+#pro .panel{background:var(--panel);border-color:var(--line)}
+#pro .ins p{color:#c7d6cb}
+#pro .lyr.on{color:#0E1A14}
+#pro .ph .n{background:var(--cyan);color:#0E1A14}
+@media (max-width:1000px){.heroband{height:220px}.hero{margin-top:-80px}.hero h1{padding:14px 16px}.light{flex-direction:column}.gauge{width:100%;height:46px;flex:none}.gauge .water{top:0;bottom:0;height:auto;width:var(--lvl)}.gauge .staff{display:none}.bigmonth{width:100%}}
 </style>
 </head>
 <body>
@@ -257,6 +351,7 @@ footer h5{font:600 11px var(--mono);letter-spacing:.14em;color:var(--text);margi
   </div>
 </header>
 
+<div class="heroband"><div id="heroMap" aria-hidden="true"></div><div class="herocap" id="heroCap"></div></div>
 <main class="wrap">
   <div class="hero">
     <div class="eyebrow" data-i18n="eyebrow">Guayas &amp; Los Ríos · Ecuador · smallholder rice</div>
@@ -502,7 +597,7 @@ const I18N = {
   wa_head:"🌾 SafeSow · plan de arroz con datos de la NASA",wa_zone:"Zona",wa_scen:"Escenario",wa_norm:"clima normal",wa_wet:m=>`más lluvioso que lo normal (×${m}, escenario)`,
   wa_s:"Estrategias (riego en verano · lluvia sobre el cultivo ene–abr)",wa_flood:m=>`Si el agua bajó en ${m}:`,wa_foot:"Opciones para revisar con un técnico local, no son instrucciones."}
 };
-Object.assign(I18N.en,{lede:"Choose your zone. We tell you what to do, using NASA data.",s_learn_btn:"📚 Learn in 2 minutes",s_see_opts:"See the 3 options",
+Object.assign(I18N.en,{hero_cap:z=>`Rice paddies near ${z}, seen from space`,lede:"Choose your zone. We tell you what to do, using NASA data.",s_learn_btn:"📚 Learn in 2 minutes",s_see_opts:"See the 3 options",
  s_m1:"🚫 <b>Low plot:</b> do not sow rice from November to April.",s_m2:l=>`🫘 <b>High plot:</b> rice in the wet season, soybean in the dry season (saves ~${l} million litres/ha).`,s_m3:"🧹 <b>Clean your drains</b> before December.",s_m4:"📅 <b>Dry-season crop:</b> wait until June.",
  s_n1:"🌾 <b>You can sow rice</b> in the wet season.",s_n2:l=>`🫘 <b>Dry season:</b> soybean instead of rice (saves ~${l} million litres/ha).`,s_n3:"🧹 <b>Keep your drains clean.</b>",
  s_why:(nd,n0)=>`<b>Why?</b> In Nov–Dec 1997 it rained <b>${nd} mm</b> here. A normal year: ${n0} mm. (NASA POWER)`,s_mc2:p=>`${p}% chance of a very wet season (1,000 simulations, 45 years of NASA data).`,
@@ -533,7 +628,7 @@ Object.assign(I18N.en,{lede:"Choose your zone. We tell you what to do, using NAS
  s_mct:"Monte Carlo simulation",s_mcs:"1,000 wet seasons resampled from 45 years (1981–2025) of NASA POWER rain, with random variation. Chance that Jan–Apr rain is 1.5× normal or more:",
  s_mcl:"Not every strong El Niño floods the coast: only 3 of the 7 strong events since 1982 brought a very wet season here. ERFEN warns this one could be comparable to 1982–83 and 1997–98.",s_mcl_n:"Any year",s_mcl_s:"Any strong El Niño (7 events since 1982, NOAA)",s_mcl_x:"Extraordinary El Niño (like 1983 and 1998)",
  s_pro_show:"🔬 Full analysis (satellite map, data, sources)",s_pro_hide:"▲ Hide the full analysis"});
-Object.assign(I18N.es,{lede:"Elige tu zona. Te decimos qué hacer, con datos de la NASA.",s_learn_btn:"📚 Aprende en 2 minutos",s_see_opts:"Ver las 3 opciones",
+Object.assign(I18N.es,{hero_cap:z=>`Arrozales cerca de ${z}, vistos desde el espacio`,lede:"Elige tu zona. Te decimos qué hacer, con datos de la NASA.",s_learn_btn:"📚 Aprende en 2 minutos",s_see_opts:"Ver las 3 opciones",
  s_m1:"🚫 <b>Lote bajo:</b> no siembres arroz de noviembre a abril.",s_m2:l=>`🫘 <b>Lote alto:</b> arroz en invierno y soya en verano (ahorras ~${l} millones de litros/ha).`,s_m3:"🧹 <b>Limpia tus drenajes</b> antes de diciembre.",s_m4:"📅 <b>Cultivo de verano:</b> espera a junio.",
  s_n1:"🌾 <b>Puedes sembrar arroz</b> en invierno.",s_n2:l=>`🫘 <b>En verano:</b> soya en vez de arroz (ahorras ~${l} millones de litros/ha).`,s_n3:"🧹 <b>Mantén limpios tus drenajes.</b>",
  s_why:(nd,n0)=>`<b>¿Por qué?</b> En nov–dic de 1997 llovieron <b>${nd} mm</b> aquí. Un año normal: ${n0} mm. (NASA POWER)`,s_mc2:p=>`${p}% de probabilidad de un invierno muy lluvioso (1.000 simulaciones, 45 años de datos NASA).`,
@@ -652,7 +747,8 @@ function ndviSeries(id){
   return {dates,vals,smooth};
 }
 
-let map, pins={}, overlay=null, base, hiBase;
+let map, pins={}, overlay=null, base, hiBase, heroMap;
+function paddyPoint(id){const r=DATA.ndvi.find(x=>x.site_id===id&&x.lat);return r?[+r.lat,+r.lon]:null;}
 const GIBS = (layer,tms,ext,time)=>`https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/${layer}/default/${time?time+"/":""}${tms}/{z}/{y}/{x}.${ext}`;
 const yday = ()=>{const d=new Date(Date.now()-864e5);return d.toISOString().slice(0,10)};
 const LAYERS = [
@@ -678,6 +774,8 @@ function initMap(){
       .bindTooltip(s.site_name,{direction:"top",offset:[0,-10]});
   });
   renderLayerBar(); setOverlay(activeOverlay);
+  heroMap=L.map("heroMap",{zoomControl:false,dragging:false,scrollWheelZoom:false,doubleClickZoom:false,boxZoom:false,keyboard:false,touchZoom:false,attributionControl:true}).setView([-1.878,-79.945],14);
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:17,attribution:"Esri World Imagery"}).addTo(heroMap);
 }
 function renderLayerBar(){
   const bar=document.getElementById("layers");
@@ -793,6 +891,7 @@ function drops(mm){return mm<300?"💧":mm<600?"💧💧":"💧💧💧";}
 function renderSimple(){
   if(!STATE.site) return;
   const site=DATA.sites.find(x=>x.site_id===STATE.site), zn=site.site_name.split(",")[0];
+  document.getElementById("heroCap").textContent=T("hero_cap",zn);
   document.getElementById("sZones").innerHTML=DATA.sites.map(s=>`<button class="bigbtn ${s.site_id===STATE.site?"on":""}" data-s="${s.site_id}">📍 ${s.site_name.split(",")[0]}<small>${(s.site_name.split(",")[1]||"").trim()}</small></button>`).join("");
   document.querySelectorAll("#sZones .bigbtn").forEach(b=>b.onclick=()=>selectSite(b.dataset.s));
   document.getElementById("sNeed").innerHTML=[["plan","s_plan","s_plan_s"],["flood","s_flood","s_flood_s"]].map(([k,a,b])=>`<button class="bigbtn ${SS.need===k?"on":""}" data-k="${k}">${T(a)}<small>${T(b)}</small></button>`).join("");
@@ -808,7 +907,7 @@ function renderSimple(){
     const lvl=mc.p>=60?"red":mc.p>=20?"amber":"green", lab=T("s_risk")[lvl];
     const todo=lvl==="red"?[T("s_m1"),T("s_m2",litres),T("s_m3"),T("s_m4")]:[T("s_n1"),T("s_n2",litres),T("s_n3")];
     const rk=(id)=>id==="S2"?["g",T("s_risk").green]:lvl==="red"?["r",T("s_risk").red]:lvl==="amber"?["a",T("s_risk").amber]:["g",T("s_risk").green];
-    box.innerHTML=`<div class="result ${lvl}"><div class="light"><div class="dot">${lvl==="red"?"!":lvl==="amber"?"~":"✓"}</div><div><h3>${T("s_title",zn,lab)}</h3><p>${T("s_mc2",mc.p)}</p></div></div>
+    box.innerHTML=`<div class="result ${lvl}"><div class="light"><div class="gauge" style="--lvl:${mc.p}%" role="img" aria-label="${mc.p}%"><div class="water"></div><div class="staff"></div><b>${mc.p}%</b></div><div><h3>${T("s_title",zn,lab)}</h3><p>${T("s_mc2",mc.p)}</p></div></div>
       <ul class="todo">${todo.map(t=>`<li><span>${t}</span></li>`).join("")}</ul>
       <div class="keyfact">${T("s_why",fmt(yr(h,"nd",1997)),fmt(ndMed))}</div>
       <a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(summaryText())}">${T("wa")}</a>
@@ -818,7 +917,7 @@ function renderSimple(){
     const fo=floodOptions(clim), p=fo[0].p;
     const warn=SS.nino&&p<=5?`<li><span>⚠️</span><span>${T("s_late",fmt(yr(h,"may",1998)))}</span></li>`:"";
     box.innerHTML=`<div class="lbl">${T("s_when")}</div><div class="months6">${[1,2,3,4,5,6].map(m=>`<button class="${m===STATE.rec?"on":""}" data-m="${m}">${M(m)}</button>`).join("")}</div>
-      <div class="result amber" style="margin-top:14px"><div class="light"><div class="dot">🌱</div><div><h3>${T("s_sow",M(p))}</h3><p>${T("s_sow_s")}</p></div></div>
+      <div class="result amber" style="margin-top:14px"><div class="light"><div class="bigmonth">${M(p)}</div><div><h3>${T("s_sow",M(p))}</h3><p>${T("s_sow_s")}</p></div></div>
       <ul class="todo">${warn}</ul>
       <div class="fcards">${fo.map(o=>`<div class="fcard"><h4>${o.c==="rice"?"🌾":"🫘"} ${T(o.c)}</h4><div class="big">${T("s_harv",M(o.harvest))}</div><div class="small">${drops(o.need)} ${T("s_lit",o.need,fmt1(o.need/100))}</div><div class="flags">${o.flags.slice(0,1).map(([i,t])=>`<div class="flag"><span>${i}</span><span>${t}</span></div>`).join("")}</div></div>`).join("")}</div></div>`;
     box.querySelectorAll(".months6 button").forEach(b=>b.onclick=()=>{STATE.rec=+b.dataset.m;renderAll();});
@@ -857,7 +956,9 @@ function renderZones(){
 function selectSite(id){
   STATE.site=id; renderZones();
   Object.keys(pins).forEach(k=>document.getElementById("pin-"+k)?.classList.toggle("on",k===id));
-  const s=DATA.sites.find(x=>x.site_id===id); if(map&&SS.proShown){map.invalidateSize(); map.setView([s.lat,s.lon],10,{animate:true});}
+  const s=DATA.sites.find(x=>x.site_id===id);
+  if(heroMap){const pp=paddyPoint(id)||[s.lat,s.lon]; heroMap.setView(pp,14); document.getElementById("heroCap").textContent=T("hero_cap",s.site_name.split(",")[0]);}
+  if(map&&SS.proShown){map.invalidateSize(); map.setView([s.lat,s.lon],10,{animate:true});}
   renderAll();
 }
 function renderAll(){
