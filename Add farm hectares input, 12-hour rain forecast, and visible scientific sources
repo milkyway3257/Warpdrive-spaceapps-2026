@@ -342,7 +342,16 @@ footer h5{font-family:var(--sans);letter-spacing:0;text-transform:none;font-size
 #pro .ph .n{background:var(--cyan);color:#0E1A14}
 @media (max-width:1000px){.heroband{height:220px}.hero{margin-top:-80px}.hero h1{padding:14px 16px}.light{flex-direction:column}.gauge{width:100%;height:46px;flex:none}.gauge .water{top:0;bottom:0;height:auto;width:var(--lvl)}.gauge .staff{display:none}.bigmonth{width:100%}}
 </style>
-</head>
+<style>
+.farmrow{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+.farmrow label{font-size:16px;font-weight:700}
+.farmrow input{width:90px;padding:10px;font:700 18px var(--sans);border:2px solid #9DB89A;border-radius:10px;background:#fff}
+.fcbox{margin-top:12px;padding:12px 14px;border-radius:12px;background:#E8F2F8;border:1.5px solid #B9D4E6;font-size:16px}
+#pro .fcbox{background:rgba(120,180,220,.12);border-color:rgba(120,180,220,.4)}
+.scinote{margin-top:12px;font-size:14px}
+.scinote summary{cursor:pointer;font-weight:700}
+.scinote div{margin-top:8px;line-height:1.5}
+</style></head>
 <body>
 
 <header class="top">
@@ -373,7 +382,8 @@ footer h5{font-family:var(--sans);letter-spacing:0;text-transform:none;font-size
   <div class="simple" id="simple">
     <section class="panel step">
       <div class="ph"><span class="n">1</span><h2 data-i18n="s_q1">Where is your farm?</h2></div>
-      <div class="pb"><div class="bigbtns" id="sZones"></div></div>
+      <div class="pb"><div class="bigbtns" id="sZones"></div>
+        <div class="farmrow"><label for="haIn">🏡 <span data-i18n="farm_q">How many hectares do you sow? (optional)</span></label><input id="haIn" type="number" min="0" max="9999" inputmode="numeric" placeholder="ha"></div></div>
     </section>
     <section class="panel step">
       <div class="ph"><span class="n">2</span><h2 data-i18n="s_q2">What do you need?</h2></div>
@@ -687,6 +697,16 @@ Object.assign(I18N.es,{soil_good:"🌱 Mejora el suelo",
  rec_wet:n=>`Quedan <b>${n}</b> mes(es) de lluvia: mantén los drenajes abiertos.`,rec_dry:"Ya viene el verano: vas a necesitar riego.",
  cover_note:"Coberturas posibles: Sesbania y Azolla (verifica si hay semilla en la zona).",
  ndvi_note:(l,d)=>`Verde alto (0,6–0,9) = cultivo creciendo. Bajo (0,1–0,3) = tierra sin cultivo o recién cosechada. Último: <b>${l}</b> (${d}).`});
+Object.assign(I18N.en,{farm_q:"How many hectares do you sow? (optional)",
+ farm_line:(ha,l)=>`🏡 On your <b>${ha} ha</b>: switching the dry season to soybean saves ≈ <b>${l} million litres</b> of irrigation water a year.`,
+ fc_t:"⏱️ Next 12 hours here:",fc_heavy:mm=>`~<b>${mm} mm</b> of rain expected — heavy. Don't spray or fertilize today; check your drains.`,fc_rain:mm=>`~<b>${mm} mm</b> of rain expected.`,fc_dry:"no rain expected.",
+ sci:"📖 What our advice is based on",
+ sci_body:"Crop water needs: <a href='https://www.fao.org/4/x0490e/x0490e00.htm' target='_blank' rel='noopener'>FAO-56</a>. Rice→soybean rotation: INIAP soybean guide. Rice that survives under water (SUB1 gene): Bailey-Serres &amp; Voesenek (2010). Rain 1981–2025: <a href='https://power.larc.nasa.gov/' target='_blank' rel='noopener'>NASA POWER</a>. El Niño warning: ERFEN (Nov 2026). Always confirm with a local technician."});
+Object.assign(I18N.es,{farm_q:"¿Cuántas hectáreas siembras? (opcional)",
+ farm_line:(ha,l)=>`🏡 En tus <b>${ha} ha</b>: cambiar el verano a soya ahorra ≈ <b>${l} millones de litros</b> de riego al año.`,
+ fc_t:"⏱️ Próximas 12 horas aquí:",fc_heavy:mm=>`se esperan ~<b>${mm} mm</b> de lluvia — fuerte. Hoy no fumigues ni abones; revisa tus drenajes.`,fc_rain:mm=>`se esperan ~<b>${mm} mm</b> de lluvia.`,fc_dry:"no se espera lluvia.",
+ sci:"📖 ¿En qué nos basamos?",
+ sci_body:"Agua que pide cada cultivo: <a href='https://www.fao.org/4/x0490e/x0490e00.htm' target='_blank' rel='noopener'>FAO-56</a>. Rotación arroz→soya: guía de soya del INIAP. Arroz que sobrevive bajo el agua (gen SUB1): Bailey-Serres y Voesenek (2010). Lluvia 1981–2025: <a href='https://power.larc.nasa.gov/' target='_blank' rel='noopener'>NASA POWER</a>. Aviso de El Niño: ERFEN (nov 2026). Confirma siempre con un técnico local."});
 let LANG = "en";
 const T = (k,...a)=>{const v=(I18N[LANG][k]??I18N.en[k]??k);return typeof v==="function"?v(...a):v};
 const M = i=>MONTHS[LANG][i-1];
@@ -915,6 +935,19 @@ function monteCarlo(site,mode){
   }
   return {p:Math.round(wet/N*100),m};
 }
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const fcCache={};
+async function loadForecast(site){
+  try{
+    let d=fcCache[site.site_id];
+    if(!d){const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${site.lat}&longitude=${site.lon}&hourly=precipitation&forecast_hours=12&timezone=America%2FGuayaquil`);d=await r.json();fcCache[site.site_id]=d;}
+    const mm=(d.hourly.precipitation||[]).reduce((a,b)=>a+(b||0),0);
+    const el=document.getElementById("fcBox"); if(!el) return;
+    el.hidden=false;
+    el.innerHTML=`<b>${T("fc_t")}</b> ${mm>=10?T("fc_heavy",fmt(mm)):mm>=1?T("fc_rain",fmt1(mm)):T("fc_dry")} <span class="src"><a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a></span>`;
+  }catch(e){}
+}
 function drops(mm){return mm<300?"💧":mm<600?"💧💧":"💧💧💧";}
 function renderSimple(){
   if(!STATE.site) return;
@@ -950,6 +983,10 @@ function renderSimple(){
       <div class="fcards">${fo.map(o=>`<div class="fcard"><h4>${o.c==="rice"?"🌾":"🫘"} ${T(o.c)}</h4><div class="big">${T("s_harv",M(o.harvest))}</div><div class="small">${drops(o.need)} ${T("s_lit",o.need,fmt1(o.need/100))}</div><div class="flags">${o.flags.slice(0,1).map(([i,t])=>`<div class="flag"><span>${i}</span><span>${t}</span></div>`).join("")}</div></div>`).join("")}</div></div>`;
     box.querySelectorAll(".months6 button").forEach(b=>b.onclick=()=>{STATE.rec=+b.dataset.m;renderAll();});
   }
+  const ha=+(lsGet("ss_ha")||0);
+  const farm=(SS.need==="plan"&&ha>0)?`<div class="keyfact">${T("farm_line",ha,fmt1(ha*(res[0].irr-res[1].irr)/100))}</div>`:"";
+  box.insertAdjacentHTML("beforeend",`${farm}<div class="fcbox" id="fcBox" hidden></div><details class="scinote"><summary>${T("sci")}</summary><div class="small">${T("sci_body")}</div></details>`);
+  loadForecast(site);
   document.getElementById("insights").innerHTML=[
     [fmt(yr(h,"nd",1997))+" mm","c-red",T("s_i1",fmt(yr(h,"nd",1997)),fmt(ndMed)+" mm"),"NASA POWER (PRECTOTCORR, monthly)","https://power.larc.nasa.gov/"],
     [fmt(yr(h,"ja",1998))+" mm","c-amber",T("s_i2",fmt1(yr(h,"ja",1998)/jaMed)),"NASA POWER (PRECTOTCORR, monthly)","https://power.larc.nasa.gov/"],
@@ -1127,6 +1164,7 @@ function applyLang(){
   document.getElementById("chipNdvi").classList.add(ndvi?"ok":"warn");
   if(!DATA.sites.length){document.querySelector(".hero").insertAdjacentHTML("beforeend",'<div class="alert">Data could not be loaded.</div>');return;}
   STATE.site=DATA.sites[0].site_id;
+  const hi=document.getElementById("haIn"); if(hi){hi.value=lsGet("ss_ha")||""; hi.onchange=()=>{lsSet("ss_ha",hi.value); renderSimple();};}
   initMap(); renderZones(); document.getElementById("proBtn").onclick=togglePro;
   const showLearn=e=>{if(e)e.preventDefault();const l=document.getElementById("learn");l.hidden=false;l.scrollIntoView({behavior:"smooth",block:"start"});};
   document.getElementById("learnBtn").onclick=showLearn; document.querySelector(".navlearn").onclick=showLearn;
