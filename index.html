@@ -359,6 +359,8 @@ footer h5{font-family:var(--sans);letter-spacing:0;text-transform:none;font-size
 .lothelp{margin:6px 0 10px;font-size:16px}
 #lotMap{height:min(58vh,460px);border-radius:12px}
 .lotdate{margin-top:6px;font-size:14px}
+.lotpt{background:#E0A400;border:3px solid #fff;border-radius:50%;box-shadow:0 1px 5px rgba(0,0,0,.55);cursor:grab}
+.lotpt.leaflet-drag-target,.lotpt:active{cursor:grabbing;background:#FFD23F}
 .farmcard{margin-top:14px;border-radius:18px;overflow:hidden;background:#13241A;color:#E8F0E6;box-shadow:0 6px 18px rgba(19,36,26,.25)}
 .farmcard[hidden]{display:none}
 .fc-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:12px 16px 0}
@@ -782,7 +784,7 @@ Object.assign(I18N.en,{farm_q:"How many hectares do you sow? (optional)",
  fc_water:l=>`With soybean in the dry season you save ≈ <b>${l} million litres</b> a year`,
  fc_gmaps:"🧭 Open in Google Maps",fc_edit:"✏️ Edit plot",fc_del:"🗑️ Delete",fc_del2:"⚠️ Sure? Tap again",
  fc_priv:"🔒 Saved only on this phone. It is not sent to any server.",
- lot_btn:"🗺️ Mark my plot on the map",lot_t:"Mark your plot",lot_help:"Tap the corners of your plot on the satellite photo. Or walk around its edge with your phone.",
+ lot_btn:"🗺️ Mark my plot on the map",lot_t:"Mark your plot",lot_help:"Tap the corners of your plot on the satellite photo (drag a corner to adjust it). Or walk around its edge with your phone.",
  lot_me:"📍 Go to where I am",lot_walk:"🚶 Walk the edge (GPS)",lot_stop:"⏹️ Stop walking",lot_undo:"↩️ Undo",lot_clear:"🗑️ Start over",lot_ok:"✅ Done",
  lot_area:ha=>`Area: ${ha} ha`,lot_need:"Mark at least 3 corners.",lot_nogps:"Location not available. Allow location, or tap the corners.",
  lot_res:(ha,k)=>`🗺️ Your plot: <b>${ha} ha</b>. ${k}`,
@@ -814,7 +816,7 @@ Object.assign(I18N.es,{farm_q:"¿Cuántas hectáreas siembras? (opcional)",
  fc_water:l=>`Con soya en verano ahorras ≈ <b>${l} millones de litros</b> al año`,
  fc_gmaps:"🧭 Abrir en Google Maps",fc_edit:"✏️ Editar lote",fc_del:"🗑️ Borrar",fc_del2:"⚠️ ¿Seguro? Toca otra vez",
  fc_priv:"🔒 Se guarda solo en este celular. No se envía a ningún servidor.",
- lot_btn:"🗺️ Marcar mi lote en el mapa",lot_t:"Marca tu lote",lot_help:"Toca las esquinas de tu lote sobre la foto satelital. O camina por el borde con tu celular.",
+ lot_btn:"🗺️ Marcar mi lote en el mapa",lot_t:"Marca tu lote",lot_help:"Toca las esquinas de tu lote sobre la foto satelital (arrastra una esquina para ajustarla). O camina por el borde con tu celular.",
  lot_me:"📍 Ir a donde estoy",lot_walk:"🚶 Caminar el borde (GPS)",lot_stop:"⏹️ Terminar caminata",lot_undo:"↩️ Deshacer",lot_clear:"🗑️ Empezar de nuevo",lot_ok:"✅ Listo",
  lot_area:ha=>`Área: ${ha} ha`,lot_need:"Marca al menos 3 esquinas.",lot_nogps:"No se pudo ver tu ubicación. Permite la ubicación o toca las esquinas.",
  lot_res:(ha,k)=>`🗺️ Tu lote: <b>${ha} ha</b>. ${k}`,
@@ -1124,12 +1126,15 @@ function lotHa(pts){ // geodesic polygon area, m2 -> ha
 function lotDraw(){
   if(!LOT.map) return;
   if(LOT.poly) LOT.map.removeLayer(LOT.poly); LOT.marks.clearLayers();
-  LOT.pts.forEach(p=>L.circleMarker(p,{radius:6,color:"#fff",weight:2,fillColor:"#E0A400",fillOpacity:1}).addTo(LOT.marks));
   LOT.poly=LOT.pts.length>=2?L.polygon(LOT.pts,{color:"#FFD23F",weight:3,fillOpacity:.25}).addTo(LOT.map):null;
-  const ha=lotHa(LOT.pts);
-  document.getElementById("lotArea").textContent=LOT.pts.length>=3?T("lot_area",fmt1(ha)):T("lot_need");
+  const icon=L.divIcon({className:"lotpt",iconSize:[22,22],iconAnchor:[11,11]}), drag=LOT.watch===null;
+  LOT.pts.forEach((p,i)=>{const mk=L.marker(p,{icon,draggable:drag,keyboard:false,autoPan:true}).addTo(LOT.marks);
+    mk.on("drag",e=>{const ll=e.target.getLatLng(); LOT.pts[i]=[ll.lat,ll.lng]; if(LOT.poly) LOT.poly.setLatLngs(LOT.pts); lotAreaTxt();});
+    mk.on("dragend",lotDraw);});
+  lotAreaTxt();
 }
-function lotStopWalk(){ if(LOT.watch!==null){navigator.geolocation.clearWatch(LOT.watch);LOT.watch=null;} const b=document.getElementById("lotWalk"); b.textContent=T("lot_walk"); b.classList.remove("rec"); }
+function lotAreaTxt(){document.getElementById("lotArea").textContent=LOT.pts.length>=3?T("lot_area",fmt1(lotHa(LOT.pts))):T("lot_need");}
+function lotStopWalk(){ if(LOT.watch!==null){navigator.geolocation.clearWatch(LOT.watch);LOT.watch=null;} const b=document.getElementById("lotWalk"); b.textContent=T("lot_walk"); b.classList.remove("rec"); lotDraw(); }
 function lotOpen(){
   const m=document.getElementById("lotModal"); m.hidden=false;
   let saved=null; try{saved=JSON.parse(lsGet("ss_lot")||"null")}catch(e){}
