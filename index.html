@@ -396,7 +396,7 @@ footer h5{font-family:var(--sans);letter-spacing:0;text-transform:none;font-size
         <div class="lbl" data-i18n="zone">Zone</div>
         <div class="zones" id="zones"></div>
         <div class="lbl" style="margin-top:14px" data-i18n="pattern">What you grow today</div>
-        <select id="pattern"><option value="rr" data-i18n="pattern_rr">Rice + rice / ratoon (soca)</option></select>
+        <div class="small"><b data-i18n="pattern_rr">Rice + rice / ratoon (soca)</b><br><span data-i18n="pattern_note">SafeSow is built for rice farmers: it starts from the most common pattern in the zone and compares it with 2 alternatives.</span></div>
         <div class="lbl" style="margin-top:14px" data-i18n="scenario">Wet-season scenario</div>
         <div class="seg" id="scen"><button data-v="1" class="on" data-i18n="normal">Normal</button><button data-v="1.5" data-i18n="wetter">Wetter (El Niño what-if)</button></div>
         <div id="multBox" style="display:none;margin-top:10px">
@@ -598,7 +598,7 @@ const I18N = {
   wa_head:"🌾 SafeSow · plan de arroz con datos de la NASA",wa_zone:"Zona",wa_scen:"Escenario",wa_norm:"clima normal",wa_wet:m=>`más lluvioso que lo normal (×${m}, escenario)`,
   wa_s:"Estrategias (riego en verano · lluvia sobre el cultivo ene–abr)",wa_flood:m=>`Si el agua bajó en ${m}:`,wa_foot:"Opciones para revisar con un técnico local, no son instrucciones."}
 };
-Object.assign(I18N.en,{hero_cap:z=>`Rice paddies near ${z}, seen from space`,lede:"Choose your zone. We tell you what to do, using NASA data.",s_learn_btn:"📚 Learn in 2 minutes",s_see_opts:"See the 3 options",
+Object.assign(I18N.en,{pattern_note:"SafeSow is built for rice farmers: it starts from the most common pattern in the zone and compares it with 2 alternatives.",hero_cap:z=>`Rice paddies near ${z}, seen from space`,lede:"Choose your zone. We tell you what to do, using NASA data.",s_learn_btn:"📚 Learn in 2 minutes",s_see_opts:"See the 3 options",
  s_m1:"🚫 <b>Low plot:</b> do not sow rice from November to April.",s_m2:l=>`🫘 <b>High plot:</b> rice in the wet season, soybean in the dry season (saves ~${l} million litres/ha).`,s_m3:"🧹 <b>Clean your drains</b> before December.",s_m4:"📅 <b>Dry-season crop:</b> wait until June.",
  s_n1:"🌾 <b>You can sow rice</b> in the wet season.",s_n2:l=>`🫘 <b>Dry season:</b> soybean instead of rice (saves ~${l} million litres/ha).`,s_n3:"🧹 <b>Keep your drains clean.</b>",
  s_why:(nd,n0)=>`<b>Why?</b> In Nov–Dec 1997 it rained <b>${nd} mm</b> here. A normal year: ${n0} mm. (NASA POWER)`,s_mc2:p=>`${p}% chance of a very wet season (1,000 simulations, 45 years of NASA data).`,
@@ -629,7 +629,7 @@ Object.assign(I18N.en,{hero_cap:z=>`Rice paddies near ${z}, seen from space`,led
  s_mct:"Monte Carlo simulation",s_mcs:"1,000 wet seasons resampled from 45 years (1981–2025) of NASA POWER rain, with random variation. Chance that Jan–Apr rain is 1.5× normal or more:",
  s_mcl:"Not every strong El Niño floods the coast: only 3 of the 7 strong events since 1982 brought a very wet season here. ERFEN warns this one could be comparable to 1982–83 and 1997–98.",s_mcl_n:"Any year",s_mcl_s:"Any strong El Niño (7 events since 1982, NOAA)",s_mcl_x:"Extraordinary El Niño (like 1983 and 1998)",
  s_pro_show:"🔬 Full analysis (satellite map, data, sources)",s_pro_hide:"▲ Hide the full analysis"});
-Object.assign(I18N.es,{hero_cap:z=>`Arrozales cerca de ${z}, vistos desde el espacio`,lede:"Elige tu zona. Te decimos qué hacer, con datos de la NASA.",s_learn_btn:"📚 Aprende en 2 minutos",s_see_opts:"Ver las 3 opciones",
+Object.assign(I18N.es,{pattern_note:"SafeSow está hecho para arroceros: parte de lo más común en la zona y lo compara con 2 alternativas.",hero_cap:z=>`Arrozales cerca de ${z}, vistos desde el espacio`,lede:"Elige tu zona. Te decimos qué hacer, con datos de la NASA.",s_learn_btn:"📚 Aprende en 2 minutos",s_see_opts:"Ver las 3 opciones",
  s_m1:"🚫 <b>Lote bajo:</b> no siembres arroz de noviembre a abril.",s_m2:l=>`🫘 <b>Lote alto:</b> arroz en invierno y soya en verano (ahorras ~${l} millones de litros/ha).`,s_m3:"🧹 <b>Limpia tus drenajes</b> antes de diciembre.",s_m4:"📅 <b>Cultivo de verano:</b> espera a junio.",
  s_n1:"🌾 <b>Puedes sembrar arroz</b> en invierno.",s_n2:l=>`🫘 <b>En verano:</b> soya en vez de arroz (ahorras ~${l} millones de litros/ha).`,s_n3:"🧹 <b>Mantén limpios tus drenajes.</b>",
  s_why:(nd,n0)=>`<b>¿Por qué?</b> En nov–dic de 1997 llovieron <b>${nd} mm</b> aquí. Un año normal: ${n0} mm. (NASA POWER)`,s_mc2:p=>`${p}% de probabilidad de un invierno muy lluvioso (1.000 simulaciones, 45 años de datos NASA).`,
